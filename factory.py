@@ -43,6 +43,17 @@ class SqlServerDatabase(AbstractDatabase):
             return {'id': result[0], 'username': result[1], 'email': result[2]}
         return None
     
+    def get_user_by_id(self, id_usuario):
+        query = """
+        EXEC RecogerDatosUsuario ?
+        """
+        self.cursor.execute(query, id_usuario)
+        result = self.cursor.fetchone()
+
+        if result and result[0] != 0:
+            return {'id': result[0], 'username': result[1], 'email': result[2]}
+        return None
+    
     def get_profile_picture(self, user_id):
         # Como no se usa en SQL Server, podemos lanzar una excepción o retornar None
         raise NotImplementedError("SQL Server does not store profile pictures.")
