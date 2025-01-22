@@ -4,7 +4,7 @@ from factory import DatabaseFactory
 
 app = Flask(__name__)
 
-# Configuración de las bases de datos (Conexión de ejemplo)
+# Configuración de las bases de datos
 SQL_SERVER_CONFIG = {
     'driver': 'ODBC Driver 17 for SQL Server',
     'server': 'localhost,1433',
@@ -29,64 +29,55 @@ app.secret_key = 'una_clave_secreta'
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
-# Factory abstract
+# Factory
 factory = DatabaseFactory()
 
-# Ruta principal - Página de inicio
 @app.route('/')
-def home():
+def inicio():
     return render_template('inicio_sesion.html')
 
-# Ruta para el login de los usuarios
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        
-        # Verificar credenciales usando la factory de SQL Server
-        user_data = factory.create_sql_server_connection(SQL_SERVER_CONFIG).verify_user(username, password)
+
+        # Obtener DAO de usuarios
+        usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+        user_data = usuario_dao.verificar_usuario(username, password)
         
         if user_data:
-            # Guardar la información del usuario en la sesión
-            session['user_id'] = user_data['id']
-            session['username'] = user_data['username']
+            session['id_usuario'] = user_data['id']
+            session['nombre_usuario'] = user_data['username']
             
-            # Recuperar foto de perfil usando MongoDB
-            user_id = user_data['id']
-            profile_picture = factory.create_mongo_connection(MONGO_DB_CONFIG).get_profile_picture(user_id)
+            # Obtener DAO de fotos de perfil
+            foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
+            profile_picture = foto_perfil_dao.obtener_foto_perfil(user_data['id'])
             
-            return render_template('perfil.html', user=user_data, profile_picture=profile_picture)
-        else:
-            # Si las credenciales son incorrectas, redirigir a la página de inicio
-            return redirect(url_for('home'))
+            return redirect(url_for('perfil'))
         
-    return redirect(url_for('home'))
+        return redirect(url_for('inicio'))
+    
+    return redirect(url_for('inicio'))
 
-# Ruta para mostrar el perfil del usuario
 @app.route('/perfil')
 def perfil():
-    # Verificar si el usuario está logueado
-    if 'user_id' not in session:
-        return redirect(url_for('home'))
-    
-    # Obtener la información del usuario desde la base de datos
-    user_id = session['user_id']
-    user_data = factory.create_sql_server_connection(SQL_SERVER_CONFIG).get_user_by_id(user_id)
-    
-    # Obtener la foto de perfil desde MongoDB
-    profile_picture = factory.create_mongo_connection(MONGO_DB_CONFIG).get_profile_picture(user_id)
-    
-    return render_template('perfil.html', user=user_data, profile_picture=profile_picture)
+    if 'id_usuario' not in session:
+        return redirect(url_for('inicio'))
 
-# Ruta para cerrar sesión
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+
+    foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
+    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
+    
+    return render_template('perfil.html', user=user_data, profile_picture=foto_perfil)
+
 @app.route('/logout')
 def logout():
-    # Eliminar la sesión cuando el usuario cierre sesión
-    session.pop('user_id', None)
-    session.pop('username', None)
-    return redirect(url_for('home'))
+    session.pop('id_usuario', None)
+    session.pop('nombre_usuario', None)
+    return redirect(url_for('inicio'))
 
-# Iniciar la aplicación
 if __name__ == '__main__':
     app.run(debug=True)

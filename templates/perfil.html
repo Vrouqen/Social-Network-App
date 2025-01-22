@@ -35,11 +35,11 @@
         </div>
     </div>
     
-    {% if session['username'] %}
+    {% if session['nombre_usuario'] %}
         <p>Bienvenido, {{ session['username'] }}</p>
         <a href="{{ url_for('logout') }}">Cerrar sesión</a>
     {% else %}
-        <a href="{{ url_for('home') }}">Iniciar sesión</a>
+        <a href="{{ url_for('inicio') }}">Iniciar sesión</a>
     {% endif %}
 
 </body>
