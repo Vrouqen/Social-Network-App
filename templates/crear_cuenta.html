@@ -10,13 +10,18 @@
 
     </div>
     <div><!-- Div que divide la página a la mitad-->
-        <h1>Inicia sesión en **nombre de la app**</h1>
-        <form>
-            <input type="text" placeholder="Nombre de usuario o correo electrónico">
-            <input type="password" placeholder="Contraseña">
-            <input type="password" placeholder="Confirmar contraseña">
+        <h1>Registra tu cueenta **nombre de la app**</h1>
+        <form action="{{ url_for('crear_cuenta') }}" method="POST">
+            <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
+            <input type="email" name="correo" placeholder="Correo electrónico" required>
+            <input type="password" name="contrasena" placeholder="Contraseña" required>
+            <input type="password" name="confirmar_contrasena" placeholder="Confirmar contraseña" required>
             <input type="submit" value="Crear cuenta">
         </form>
+        
+        {% if error %}
+            <p style="color: red;">{{ mensaje }}</p>
+        {% endif %}
     </div>
     
 </body>

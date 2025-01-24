@@ -22,9 +22,22 @@ class ConexionSQLServer(Conexion):
             f'SERVER={self.config["server"]};'
             f'DATABASE={self.config["database"]};'
             f'UID={self.config["username"]};'
-            f'PWD={self.config["password"]}'
+            f'PWD={self.config["password"]}',
+            autocommit=False
         )
         self.cursor = self.conexion.cursor() #Se conecta con la configuración
+    
+    def commit(self):
+        try:
+            print("Realizando commit...")
+            self.conexion.commit()
+            print("Commit realizado correctamente.")
+        except Exception as e:
+            print(f"Error en commit: {e}")
+    
+    def rollback(self):
+        """Revierte la transacción actual."""
+        self.conexion.rollback()
 
 # Conexión a MongoDB
 class ConexionMongo(Conexion):
@@ -57,19 +70,21 @@ class UsuarioDAO:
         if result: #Valida que haya retornado una respuesta
             return {'id': result[0], 'username': result[1], 'email': result[2]} #Devuelve en un diccionario los datos del usuario
         return None
+    
+    def registrar_usuario(self, nombre_usuario, correo, contrasena, confirmar_contrasena):
+        try:
+            self.cursor.execute("BEGIN TRANSACTION")
+            query = "EXEC CrearUsuario ?, ?, ?, ?"
+            self.cursor.execute(query, nombre_usuario, correo, contrasena, confirmar_contrasena)
+            self.conexion.commit()
+            return "Usuario creado exitosamente."
+        except Exception as e:
+            print(f"Error al crear el usuario: {e}")
+            self.conexion.rollback()  # Revertir la transacción en caso de error
+            return f"Error: {e}"
 
 # DAO para conexión a la colección Fotos_Perfil en MongoDB
 class FotoPerfilDAO:
-    """
-    def __init__(self, conexion_mongo):
-        self.conexion = conexion_mongo #Indica como atributo conexión el objeto concreto conexión MongoDB
-        self.collection = self.conexion.collection #Hace referencia a la colección del objeto concreto
-    
-    def obtener_foto_perfil(self, user_id): #Toca hacerlo procedimiento almacenado!!!
-        photo = self.collection.find_one({'id_usuario': user_id})
-        return photo['foto_perfil'] if photo else None
-    """
-
     def __init__(self, conexion_mongo, ruta_foto_defecto="./static/images/foto_defecto.png"):
         self.conexion = conexion_mongo  # Se guarda la conexión a MongoDB
         self.collection = self.conexion.collection  # Referencia a la colección Fotos_Perfil
@@ -77,17 +92,17 @@ class FotoPerfilDAO:
     
     def obtener_foto_perfil(self, user_id):
         try:
-            photo = self.collection.find_one({'id_usuario': user_id}, {"_id": 0, "foto_perfil": 1})
+            photo = self.collection.find_one({'id_usuario': user_id}, {"_id": 0, "foto_perfil": 1}) #Busca la foto de perfil en la Base de Mongo
             if photo:
                 return photo['foto_perfil']
             else:
-                return self.obtener_foto_defecto()
+                return self.obtener_foto_defecto() #Si no la encuentra llama a la imagen por defecto
         except Exception as e:
             return self.obtener_foto_defecto()
 
     def obtener_foto_defecto(self):
         if os.path.exists(self.ruta_foto_defecto):
-            with open(self.ruta_foto_defecto, "rb") as image_file:
+            with open(self.ruta_foto_defecto, "rb") as image_file: #Carga la imagen por defecto desde los archivos del proyecto
                 return base64.b64encode(image_file.read()).decode("utf-8")
         else:
             return None
