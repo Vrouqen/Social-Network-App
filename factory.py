@@ -73,15 +73,20 @@ class UsuarioDAO:
     
     def registrar_usuario(self, nombre_usuario, correo, contrasena, confirmar_contrasena):
         try:
-            self.cursor.execute("BEGIN TRANSACTION")
-            query = "EXEC CrearUsuario ?, ?, ?, ?"
-            self.cursor.execute(query, nombre_usuario, correo, contrasena, confirmar_contrasena)
+            query = """DECLARE @Mensaje NVARCHAR(MAX);
+                    EXEC CrearUsuario ?, ?, ?, ?, @Mensaje OUTPUT;
+                    SELECT @Mensaje;"""
+            self.cursor.execute(query, (nombre_usuario, correo, contrasena, confirmar_contrasena))
+
+            # Capturar el mensaje devuelto
+            mensaje = self.cursor.fetchone()
             self.conexion.commit()
-            return "Usuario creado exitosamente."
+            return mensaje[0] if mensaje else "Error desconocido al registrar el usuario."
         except Exception as e:
-            print(f"Error al crear el usuario: {e}")
-            self.conexion.rollback()  # Revertir la transacción en caso de error
-            return f"Error: {e}"
+            print(f"Error al registrar usuario: {e}")
+            self.conexion.rollback()
+            return f"Error al registrar usuario: {e}"
+
 
 # DAO para conexión a la colección Fotos_Perfil en MongoDB
 class FotoPerfilDAO:
