@@ -1,6 +1,8 @@
 import pyodbc
 from pymongo import MongoClient
 from abc import ABC, abstractmethod
+import os
+import base64
 
 # Clase abstracta para las conexiones
 class Conexion(ABC):
@@ -58,6 +60,7 @@ class UsuarioDAO:
 
 # DAO para conexión a la colección Fotos_Perfil en MongoDB
 class FotoPerfilDAO:
+    """
     def __init__(self, conexion_mongo):
         self.conexion = conexion_mongo #Indica como atributo conexión el objeto concreto conexión MongoDB
         self.collection = self.conexion.collection #Hace referencia a la colección del objeto concreto
@@ -65,6 +68,29 @@ class FotoPerfilDAO:
     def obtener_foto_perfil(self, user_id): #Toca hacerlo procedimiento almacenado!!!
         photo = self.collection.find_one({'id_usuario': user_id})
         return photo['foto_perfil'] if photo else None
+    """
+
+    def __init__(self, conexion_mongo, ruta_foto_defecto="./static/images/foto_defecto.png"):
+        self.conexion = conexion_mongo  # Se guarda la conexión a MongoDB
+        self.collection = self.conexion.collection  # Referencia a la colección Fotos_Perfil
+        self.ruta_foto_defecto = ruta_foto_defecto  # Ruta de la foto por defecto
+    
+    def obtener_foto_perfil(self, user_id):
+        try:
+            photo = self.collection.find_one({'id_usuario': user_id}, {"_id": 0, "foto_perfil": 1})
+            if photo:
+                return photo['foto_perfil']
+            else:
+                return self.obtener_foto_defecto()
+        except Exception as e:
+            return self.obtener_foto_defecto()
+
+    def obtener_foto_defecto(self):
+        if os.path.exists(self.ruta_foto_defecto):
+            with open(self.ruta_foto_defecto, "rb") as image_file:
+                return base64.b64encode(image_file.read()).decode("utf-8")
+        else:
+            return None
 
 # Factory que devuelve DAOs en lugar de solo conexiones
 class DatabaseFactory:
