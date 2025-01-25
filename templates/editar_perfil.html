@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Perfil</title>
+</head>
+<body>
+    <h1>Editar Perfil</h1>
+    {% if error %}
+        <p style="color: red;">{{ mensaje }}</p>
+    {% endif %}
+    <form method="POST" enctype="multipart/form-data">
+        <label for="nuevo_nombre">Nuevo Nombre de Usuario:</label>
+        <input type="text" id="nuevo_nombre" name="nuevo_nombre" value="{{ user.username }}" required><br><br>
+    
+        <button type="submit">Guardar Cambios</button>
+    </form>
+    
+    <a href="{{ url_for('perfil') }}">Volver al perfil</a>
+</body>
+</html>

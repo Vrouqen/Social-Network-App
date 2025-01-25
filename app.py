@@ -68,13 +68,48 @@ def crear_cuenta():
         contrasena = request.form['contrasena']
         confirmar_contrasena = request.form['confirmar_contrasena']
         
-        # Aquí llamas al método del DAO para registrar el usuario
+        # Llamar al método del DAO para registrar el usuario
         usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-        mensaje = usuario_dao.registrar_usuario(username, correo, contrasena, confirmar_contrasena)
+        resultado = usuario_dao.registrar_usuario(username, correo, contrasena, confirmar_contrasena)
         
-        # Pasar el mensaje a la plantilla de la creación de cuenta
-        return render_template('crear_cuenta.html', error=True, mensaje=mensaje)
-    return render_template('inicio_sesion.html')
+        if resultado:  # Si el resultado es positivo, es decir, el registro fue exitoso
+            return redirect(url_for('inicio'))  # Redirigir al inicio de sesión (inicio_sesion.html)
+        
+        # Si hubo un error en el registro, puedes redirigir o mostrar un mensaje de error
+        return render_template('crear_cuenta.html', error=True, mensaje="Error en el registro.")
+    
+    return render_template('crear_cuenta.html')
+
+
+
+
+@app.route('/editar_perfil', methods=['GET', 'POST'])
+def editar_perfil():
+    if 'id_usuario' not in session:
+        return redirect(url_for('inicio'))
+    
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    
+    if request.method == 'POST':
+        nuevo_nombre = request.form['nuevo_nombre']
+        id_usuario = session['id_usuario']
+        
+        # Llamar al método del DAO para actualizar el perfil
+        resultado = usuario_dao.actualizar_nombre_usuario(id_usuario, nuevo_nombre)
+        
+        if resultado:
+            session['nombre_usuario'] = nuevo_nombre
+            return redirect(url_for('perfil'))
+        else:
+            # Si el nombre ya está en uso, mostrar el error y pasar los datos del usuario
+            user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+            return render_template('editar_perfil.html', error=True, mensaje="Este nombre ya esta en uso.", user=user_data)
+    
+    # Cargar datos actuales del usuario para el formulario
+    user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+    return render_template('editar_perfil.html', user=user_data)
+
+
 
 @app.route('/crear_publicacion', methods=['POST'])
 def crear_publicacion():

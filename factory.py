@@ -64,6 +64,18 @@ class UsuarioDAO:
             return self.obtener_usuario_id(usuario_id) #Retorna los datos del usuario
         return None
 
+    def actualizar_nombre_usuario(self, id_usuario, nuevo_nombre):
+        try:
+            query = "EXEC ActualizarUsuario ?, ?"
+            self.cursor.execute(query, id_usuario, nuevo_nombre)
+            self.conexion.commit()
+            return True
+        except Exception as e:
+            print(f"Error al actualizar usuario: {e}")
+            self.conexion.rollback()
+            return False
+
+
     def obtener_usuario_id(self, id_usuario): #Método que devuelve los datos del usuario ingresando su id
         query = "EXEC RecogerDatosUsuario ?"
         self.cursor.execute(query, id_usuario)
