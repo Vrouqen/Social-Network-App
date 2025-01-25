@@ -3,23 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='./CSS/inicio_sesion.css')}}">
+    <title>IncioSesion</title>
 </head>
-<body>
-    <div> <!-- Div que divide la página a la mitad-->
-
-    </div>
-    <div><!-- Div que divide la página a la mitad-->
-        <h1>Inicia sesión en **nombre de la app**</h1>
+<body class="body1">
         <form action="/login" method="POST">
-            <input type="text" name="username" id="username" placeholder="Nombre de usuario o correo electrónico">
-            <input type="password" name="password" id="password" placeholder="Contraseña">
-            <input type="submit" value="Iniciar sesión">
-        </form>
-        <a href="{{ url_for('crear_cuenta') }}">
-            <button>Registrarse</button>
-        </a>
-    </div>
-    
+            <div class="container">
+                <div class="cubo1">
+                    <img src="{{url_for('static', filename='./Images/sesion.png')}}" class="img_sesion">
+                </div>
+                <div class="cubo2">
+                    <p class="h11">Nombre APP</p>
+                </div>
+                <div class="cubo3">
+                    <div class="cubo3_1">
+                        <img src="{{url_for('static', filename='./Images/logo_user.png')}}" class="img_icono1">
+                    </div>
+                    <div class="cubo3_2">
+                        <input type="text" name="username" id="username" placeholder="Nombre de usuario o correo electrónico" class="text1">
+                    </div>
+                </div>
+                <div class="cubo3">
+                    <div class="cubo3_1">
+                        <img src="{{url_for('static', filename='./Images/logo_contra.png')}}" class="img_icono1">
+                    </div>
+                    <div class="cubo3_2">
+                        <input type="password" name="password" id="password" placeholder="Contraseña" class="text1">
+                    </div>
+                </div>
+            </div>
+            <div class="container2">
+                <input type="submit" value="Iniciar sesión" class="btn1">
+                <input type="button" value="Registrarse" class="btn1">
+            </div>
+        </form>         
 </body>
 </html>
