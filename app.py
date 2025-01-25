@@ -60,6 +60,22 @@ def login():
     
     return redirect(url_for('inicio'))
 
+@app.route('/crear_cuenta', methods=['GET', 'POST'])
+def crear_cuenta():
+    if request.method == 'POST':
+        username = request.form['nombre_usuario']
+        correo = request.form['correo']
+        contrasena = request.form['contrasena']
+        confirmar_contrasena = request.form['confirmar_contrasena']
+        
+        # Aquí llamas al método del DAO para registrar el usuario
+        usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+        mensaje = usuario_dao.registrar_usuario(username, correo, contrasena, confirmar_contrasena)
+        
+        # Pasar el mensaje a la plantilla de la creación de cuenta
+        return render_template('crear_cuenta.html', error=True, mensaje=mensaje)
+    return render_template('crear_cuenta.html')
+
 @app.route('/perfil')
 def perfil():
     if 'id_usuario' not in session:
