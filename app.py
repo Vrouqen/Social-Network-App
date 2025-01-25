@@ -74,7 +74,37 @@ def crear_cuenta():
         
         # Pasar el mensaje a la plantilla de la creación de cuenta
         return render_template('crear_cuenta.html', error=True, mensaje=mensaje)
-    return render_template('crear_cuenta.html')
+    return render_template('inicio_sesion.html')
+
+@app.route('/crear_publicacion', methods=['POST'])
+def crear_publicacion():
+    if 'id_usuario' not in session:
+        return redirect(url_for('inicio'))
+
+    contenido = request.form['contenido']
+    id_usuario = session['id_usuario']
+    
+    # Obtener el DAO de publicaciones
+    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
+    resultado = publicacion_dao.crear_publicacion(id_usuario,id_usuario, contenido)
+
+    return redirect(url_for('ver_publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
+
+@app.route('/ver_publicaciones')
+def ver_publicaciones():
+    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
+    publicaciones = publicacion_dao.obtener_publicaciones()
+    
+    return render_template('publicaciones.html', publicaciones=publicaciones)
+
+from flask import jsonify
+
+@app.route('/api/publicaciones')
+def api_publicaciones():
+    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
+    publicaciones = publicacion_dao.obtener_publicaciones()
+    return jsonify(publicaciones)
+
 
 @app.route('/perfil')
 def perfil():

@@ -3,6 +3,7 @@ from pymongo import MongoClient
 from abc import ABC, abstractmethod
 import os
 import base64
+from datetime import datetime
 
 # Clase abstracta para las conexiones
 class Conexion(ABC):
@@ -111,13 +112,55 @@ class FotoPerfilDAO:
                 return base64.b64encode(image_file.read()).decode("utf-8")
         else:
             return None
+        
+class PublicacionDAO:
+    def __init__(self, conexion_mongo):
+        self.conexion = conexion_mongo  # Conexión a MongoDB
+        self.collection = self.conexion.db["Publicaciones"]  # Referencia a la colección de publicaciones
 
-# Factory que devuelve DAOs en lugar de solo conexiones
+    def crear_publicacion(self, id_publicacion, id_usuario, contenido, id_respuesta=None, foto_publicacion=None, fecha=None):
+        try:
+            fecha = datetime.utcnow().isoformat() + "Z"
+
+            publicacion = {
+                "id_publicacion": id_publicacion,  # ID único de la publicación
+                "id_usuario": id_usuario,  # ID del usuario que publica
+                "contenido": contenido,  # Texto de la publicación
+                "id_respuesta": id_respuesta,  # Si es una respuesta a otra publicación
+                "foto_publicacion": foto_publicacion,  # Imagen en base64 o URL
+                "fecha": fecha  # Fecha de publicación en formato ISO
+            }
+
+            resultado = self.collection.insert_one(publicacion) # Insertar la publicación en la colección de MongoDB
+
+            if resultado.inserted_id:
+                return {"mensaje": "Publicación creada exitosamente.", "id": str(resultado.inserted_id)}
+            else:
+                return {"error": "No se pudo crear la publicación."}
+        
+        except Exception as e:
+            return {"error": f"Error al crear la publicación: {str(e)}"}
+        
+    def obtener_publicaciones(self):
+        try:
+            publicaciones = list(self.collection.find().sort("fecha", -1))  # Ordenar por fecha descendente
+            
+            for publicacion in publicaciones: # Convertir ObjectId a string y eliminar campos innecesarios
+                publicacion["_id"] = str(publicacion["_id"])  # Convertir ObjectId a string
+            
+            return publicaciones
+        except Exception as e:
+            return {"error": f"Error al obtener publicaciones: {str(e)}"}
+
 class DatabaseFactory:
     def crear_usuario_dao(self, config):
         conexion = ConexionSQLServer(config)
-        return UsuarioDAO(conexion) #Se crea un objeto padre que retornará un objeto hijo DAO proveniente de un objeto concreto conexión 
+        return UsuarioDAO(conexion)
 
     def crear_foto_perfil_dao(self, config):
         conexion = ConexionMongo(config)
-        return FotoPerfilDAO(conexion) #Se crea un objeto padre que retornará un objeto hijo DAO proveniente de un objeto concreto conexión 
+        return FotoPerfilDAO(conexion)
+
+    def crear_publicacion_dao(self, config):
+        conexion = ConexionMongo(config)
+        return PublicacionDAO(conexion)
