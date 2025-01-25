@@ -88,7 +88,6 @@ class UsuarioDAO:
             self.conexion.rollback()
             return f"Error al registrar usuario: {e}"
 
-
 # DAO para conexión a la colección Fotos_Perfil en MongoDB
 class FotoPerfilDAO:
     def __init__(self, conexion_mongo, ruta_foto_defecto="./static/images/foto_defecto.png"):
@@ -118,39 +117,39 @@ class PublicacionDAO:
         self.conexion = conexion_mongo  # Conexión a MongoDB
         self.collection = self.conexion.db["Publicaciones"]  # Referencia a la colección de publicaciones
 
-    def crear_publicacion(self, id_publicacion, id_usuario, contenido, id_respuesta=None, foto_publicacion=None, fecha=None):
-        try:
-            fecha = datetime.utcnow().isoformat() + "Z"
+    def obtener_nuevo_id_publicacion(self):
+        """Obtiene el último id_publicacion y lo incrementa."""
+        ultima_publicacion = self.collection.find_one({}, sort=[("id_publicacion", -1)])
+        if ultima_publicacion and "id_publicacion" in ultima_publicacion:
+            return ultima_publicacion["id_publicacion"] + 1
+        return 1  # Si no hay publicaciones, comenzamos desde 1.
 
-            publicacion = {
-                "id_publicacion": id_publicacion,  # ID único de la publicación
-                "id_usuario": id_usuario,  # ID del usuario que publica
-                "contenido": contenido,  # Texto de la publicación
-                "id_respuesta": id_respuesta,  # Si es una respuesta a otra publicación
-                "foto_publicacion": foto_publicacion,  # Imagen en base64 o URL
-                "fecha": fecha  # Fecha de publicación en formato ISO
-            }
-
-            resultado = self.collection.insert_one(publicacion) # Insertar la publicación en la colección de MongoDB
-
-            if resultado.inserted_id:
-                return {"mensaje": "Publicación creada exitosamente.", "id": str(resultado.inserted_id)}
-            else:
-                return {"error": "No se pudo crear la publicación."}
+    def crear_publicacion(self, id_usuario, contenido):
+        """Crea una nueva publicación con un id_publicacion autonumérico."""
+        nuevo_id = self.obtener_nuevo_id_publicacion()
+        nueva_publicacion = {
+            "id_publicacion": nuevo_id,
+            "id_usuario": id_usuario,
+            "contenido": contenido,
+            "fecha": datetime.utcnow().isoformat(),
+            "foto_publicacion": None,
+            "id_respuesta": None
+        }
+        self.collection.insert_one(nueva_publicacion)
+        return nueva_publicacion
         
-        except Exception as e:
-            return {"error": f"Error al crear la publicación: {str(e)}"}
-        
-    def obtener_publicaciones(self):
+    def obtener_publicaciones(self, id_usuario=None):
         try:
-            publicaciones = list(self.collection.find().sort("fecha", -1))  # Ordenar por fecha descendente
+            filtro = {"id_usuario": id_usuario} if id_usuario else {}  # Filtrar por usuario si se proporciona
+            publicaciones = list(self.collection.find(filtro).sort("fecha", -1))  # Ordenar por fecha descendente
             
-            for publicacion in publicaciones: # Convertir ObjectId a string y eliminar campos innecesarios
-                publicacion["_id"] = str(publicacion["_id"])  # Convertir ObjectId a string
+            for publicacion in publicaciones:  # Convertir ObjectId a string y limpiar campos innecesarios
+                publicacion["_id"] = str(publicacion["_id"])
             
             return publicaciones
         except Exception as e:
             return {"error": f"Error al obtener publicaciones: {str(e)}"}
+
 
 class DatabaseFactory:
     def crear_usuario_dao(self, config):

@@ -6,16 +6,23 @@
     <title>App</title>
 </head>
 <body>
-    <div> <!-- Perfil -->
-        Foto
-        Usuario
-        usuario@ejemplo.com
-    </div>
     <div> <!-- Barra superior -->
         <form>
             <input type="text" placeholder="Buscar">
             <input type="submit" value="Buscar">
         </form>
+    </div>
+    <div> <!-- Perfil -->
+        {% if profile_picture %}
+            <h3>Foto de Perfil:</h3>
+            <a href="{{ url_for('perfil') }}">
+                <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
+            </a>
+        {% endif %}
+        <a href="{{ url_for('perfil') }}">
+            {{ user.username }}
+        </a>
+        {{ user.email }}
     </div>
     <div> <!-- Crear publicación -->
         <form>
@@ -24,6 +31,11 @@
             <input type="submit" value="Publicar">
         </form>
     </div>
+
+    <div>
+        <p>Bienvenido, {{ user.username }}</p>
+    </div>
+
     <div><!-- Contenido -->
         
         <h1>Publicaciones</h1>
@@ -37,15 +49,19 @@
         <ul>
             {% for publicacion in publicaciones %}
                 <li>
-                    <p><strong>Usuario ID:</strong> {{ publicacion.id_usuario }}</p>
+                    <p><strong>{{ publicacion.nombre_usuario }}</strong> - <em>{{ publicacion.fecha }}</em></p>
                     <p>{{ publicacion.contenido }}</p>
-                    <p><em>Fecha: {{ publicacion.fecha }}</em></p>
                 </li>
             {% endfor %}
         </ul>
 
-
     </div>
-    
+    <div>
+        {% if session['nombre_usuario'] %}
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+        {% else %}
+            <a href="{{ url_for('inicio') }}">Iniciar sesión</a>
+        {% endif %}
+    </div>
 </body>
 </html>

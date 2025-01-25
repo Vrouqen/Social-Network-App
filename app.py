@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_session import Session
 from factory import DatabaseFactory
+from flask import jsonify
 
 app = Flask(__name__)
 
@@ -54,7 +55,7 @@ def login():
             foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
             profile_picture = foto_perfil_dao.obtener_foto_perfil(user_data['id'])
             
-            return redirect(url_for('perfil'))
+            return redirect(url_for('publicaciones'))
         
         return redirect(url_for('inicio'))
     
@@ -86,38 +87,64 @@ def crear_publicacion():
     
     # Obtener el DAO de publicaciones
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    resultado = publicacion_dao.crear_publicacion(id_usuario,id_usuario, contenido)
+    resultado = publicacion_dao.crear_publicacion(id_usuario, contenido)
 
-    return redirect(url_for('ver_publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
+    return redirect(url_for('publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
 
-@app.route('/ver_publicaciones')
-def ver_publicaciones():
+@app.route('/publicaciones')
+def publicaciones():
+    if 'id_usuario' not in session:
+        return redirect(url_for('inicio'))
+    
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
     publicaciones = publicacion_dao.obtener_publicaciones()
+
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+
+    # Enriquecer cada publicación con el nombre de usuario
+    for publicacion in publicaciones:
+        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
+        if usuario:
+            publicacion["nombre_usuario"] = usuario["username"]
     
-    return render_template('publicaciones.html', publicaciones=publicaciones)
+    # Obtener información del usuario en sesión
+    user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
 
-from flask import jsonify
+    # Obtener foto de perfil
+    foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
+    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
 
+    return render_template('publicaciones.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
 @app.route('/api/publicaciones')
 def api_publicaciones():
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
     publicaciones = publicacion_dao.obtener_publicaciones()
     return jsonify(publicaciones)
 
-
 @app.route('/perfil')
 def perfil():
     if 'id_usuario' not in session:
         return redirect(url_for('inicio'))
 
+    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
+    publicaciones = publicacion_dao.obtener_publicaciones(session['id_usuario'])
+
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    
+    # Enriquecer cada publicación con el nombre de usuario
+    for publicacion in publicaciones:
+        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
+        if usuario:
+            publicacion["nombre_usuario"] = usuario["username"]
+
+    # Obtener información del usuario en sesión
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
 
+    # Obtener foto de perfil
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
     foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
     
-    return render_template('perfil.html', user=user_data, profile_picture=foto_perfil)
+    return render_template('perfil.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
 
 @app.route('/logout')
 def logout():

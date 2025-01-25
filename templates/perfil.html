@@ -13,30 +13,41 @@
         </form>
     </div>
     <div><!-- Contenido -->
+        <a href="{{ url_for('publicaciones') }}">
+            Regresar a la feed
+        </a>
+
         {% if profile_picture %}
             <h3>Foto de Perfil:</h3>
             <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
         {% else %}
-            <p>No hay foto de perfil disponible.</p>
+            <!-- <p>No hay foto de perfil disponible.</p> -->
         {% endif %}
         {{ user.username }}
         {{ user.email }}
         Seguiendo x  Seguidores x
         Publicaciones
         
-        <div> <!-- Publicación -->
-            Foto
-            <br>
-            <a href="www.google.com">Usuario</a> - Fecha
-            <br>
-            Contenido
-            <br>
-            Foto
+        <div>
+            <p>Bienvenido, {{ user.username }}</p>
         </div>
+
+        
+    </div>
+
+    <div> <!-- Publicación -->
+        <h2>Publicaciones de {{ user.username }}</h2>
+        <ul>
+            {% for publicacion in publicaciones %}
+                <li>
+                    <p><strong>{{ publicacion.nombre_usuario }}</strong> - <em>{{ publicacion.fecha }}</em></p>
+                    <p>{{ publicacion.contenido }}</p>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
     
     {% if session['nombre_usuario'] %}
-        <p>Bienvenido, {{ session['username'] }}</p>
         <a href="{{ url_for('logout') }}">Cerrar sesión</a>
     {% else %}
         <a href="{{ url_for('inicio') }}">Iniciar sesión</a>
