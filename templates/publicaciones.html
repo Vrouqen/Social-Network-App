@@ -4,22 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App</title>
+    <script>
+        function buscarUsuario() {
+            let input = document.getElementById("searchUser").value;
+            if (input.length > 1) {
+                fetch(`/buscar_usuarios?query=${input}`)
+                .then(response => response.json())
+                .then(data => {
+                    let resultados = document.getElementById("resultadosBusqueda");
+                    resultados.innerHTML = "";
+                    data.forEach(user => {
+                        let li = document.createElement("li");
+                        li.innerHTML = `<a href="/perfil/${user.id}">${user.username}</a>`;
+                        resultados.appendChild(li);
+                    });
+                });
+            }
+        }
+    </script>
+        
 </head>
 <body>
     <div> <!-- Barra superior -->
-        <form>
-            <input type="text" placeholder="Buscar">
-            <input type="submit" value="Buscar">
-        </form>
+        <input type="text" id="searchUser" placeholder="Buscar usuario..." onkeyup="buscarUsuario()">
+        <ul id="resultadosBusqueda"></ul>
     </div>
     <div> <!-- Perfil -->
         {% if profile_picture %}
             <h3>Foto de Perfil:</h3>
-            <a href="{{ url_for('perfil') }}">
+            <a href="{{ url_for('perfil', id_usuario=user.id) }}">
                 <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
             </a>
         {% endif %}
-        <a href="{{ url_for('perfil') }}">
+        <a href="{{ url_for('perfil', id_usuario=user.id) }}">
             {{ user.username }}
         </a>
         {{ user.email }}

@@ -142,33 +142,47 @@ def publicaciones():
 
     return render_template('publicaciones.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
 
-@app.route('/perfil')
-def perfil():
-    if 'id_usuario' not in session: # Verifica que exista una sesión activa
-        return redirect(url_for('inicio')) # De no ser así lo direcciona al login
-
-    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    publicaciones = publicacion_dao.obtener_publicaciones(session['id_usuario']) # Se obtienen las publicaciones del usuario
+@app.route('/perfil/<int:id_usuario>')
+def perfil(id_usuario=None):
+    if 'id_usuario' not in session:
+        return redirect(url_for('inicio'))
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-    
-    # Enriquecer cada publicación con nombre de usuario y cantidad de likes
+
+    if id_usuario is None:  
+        id_usuario = session['id_usuario']  # Si no se proporciona, usa el usuario en sesión
+
+    user_data = usuario_dao.obtener_usuario_id(id_usuario)  # Obtener datos del usuario
+    if not user_data:
+        return redirect(url_for('publicaciones'))  # Redirige si el usuario no existe
+
+    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
+    publicaciones = publicacion_dao.obtener_publicaciones(id_usuario)  # Obtener publicaciones del usuario
+
     for publicacion in publicaciones:
-        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"]) # Obtiene la información del usuario por id
-        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"]) # Obtiene la cantidad de likes de la publicación
-        if usuario: 
-            publicacion["nombre_usuario"] = usuario["username"] # Se le asigna al nombre de usuario de la publicación el username de la consulta
-            publicacion["cant_likes"] = cant_likes # Se le asigna la cantidad de likes a la publicación
+        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
+        publicacion["cant_likes"] = cant_likes  
 
-    user_data = usuario_dao.obtener_usuario_id(session['id_usuario']) # Obtener información del usuario en sesión
-
-    cant_seguidores = usuario_dao.obtener_cant_seguidores(session['id_usuario']) # Obtener cantidad de seguidores
-    cant_seguidos = usuario_dao.obtener_cant_seguidos(session['id_usuario']) # Obtener cantidad de seguidos
+    cant_seguidores = usuario_dao.obtener_cant_seguidores(id_usuario)
+    cant_seguidos = usuario_dao.obtener_cant_seguidos(id_usuario)
 
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
-    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario']) # Obtener foto de perfil
-    
-    return render_template('perfil.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil, cant_seguidores=cant_seguidores, cant_seguidos=cant_seguidos)
+    foto_perfil = foto_perfil_dao.obtener_foto_perfil(id_usuario)
+
+    return render_template('perfil.html', publicaciones=publicaciones, user=user_data, 
+                           profile_picture=foto_perfil, cant_seguidores=cant_seguidores, 
+                           cant_seguidos=cant_seguidos)
+
+
+@app.route('/buscar_usuarios')
+def buscar_usuarios():
+    query = request.args.get('query', '') # Obtener el término de búsqueda desde la URL
+
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    resultados = usuario_dao.buscar_usuarios(query)  # Agregar método en el DAO
+
+    return jsonify(resultados)
+
 
 @app.route('/logout')
 def logout(): # Se elimina la sesión activa

@@ -72,6 +72,12 @@ class UsuarioDAO:
             self.conexion.rollback()
             return False
 
+    def buscar_usuarios(self, query):
+        query_sql = "EXEC BuscarUsuarios ?"  
+        self.cursor.execute(query_sql, query)
+        resultados = self.cursor.fetchall()
+        return [{'id': row[0], 'username': row[1]} for row in resultados] if resultados else []
+
     def likear_publicacion(self, id_publicacion, id_usuario):
         try:
             query = "EXEC LikearPublicacion ?, ?" 
