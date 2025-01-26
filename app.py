@@ -161,8 +161,10 @@ def perfil(id_usuario=None):
     publicaciones = publicacion_dao.obtener_publicaciones(id_usuario)  # Obtener publicaciones del usuario
 
     for publicacion in publicaciones:
+        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
         cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
         publicacion["cant_likes"] = cant_likes  
+        publicacion["nombre_usuario"] = usuario['username']
 
     cant_seguidores = usuario_dao.obtener_cant_seguidores(id_usuario)
     cant_seguidos = usuario_dao.obtener_cant_seguidos(id_usuario)
