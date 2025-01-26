@@ -60,7 +60,14 @@
         <ul>
             {% for publicacion in publicaciones %}
                 <li>
-                    <p><strong>{{ publicacion.nombre_usuario }}</strong> - <em>{{ publicacion.fecha }}</em></p>
+                    <p>
+                        <strong>
+                            <a href="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
+                                {{ publicacion.nombre_usuario }}
+                            </a>
+                        </strong> 
+                        - <em>{{ publicacion.fecha }}</em>
+                    </p>                    
                     <p>{{ publicacion.contenido }}</p>
                     <p>Likear {{ publicacion.cant_likes}}</p>
                     <br>
