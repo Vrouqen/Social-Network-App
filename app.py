@@ -82,31 +82,30 @@ def crear_cuenta():
     return render_template('crear_cuenta.html')
 
 
-
-
 @app.route('/editar_perfil', methods=['GET', 'POST'])
 def editar_perfil():
     if 'id_usuario' not in session:
         return redirect(url_for('inicio'))
-    
+
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-    
+
     if request.method == 'POST':
         nuevo_nombre = request.form['nuevo_nombre']
+        nuevo_mensaje = request.form['nuevo_mensaje']
         id_usuario = session['id_usuario']
-        
-        # Llamar al método del DAO para actualizar el perfil
-        resultado = usuario_dao.actualizar_nombre_usuario(id_usuario, nuevo_nombre)
-        
+
+        # Actualizar tanto el nombre como el mensaje del usuario
+        resultado = usuario_dao.actualizar_datos_usuario(id_usuario, nuevo_nombre, nuevo_mensaje)
+
         if resultado:
-            session['nombre_usuario'] = nuevo_nombre
+            session['nombre_usuario'] = nuevo_nombre  # Actualiza el nombre en la sesión
             return redirect(url_for('perfil'))
         else:
-            # Si el nombre ya está en uso, mostrar el error y pasar los datos del usuario
+            # Mostrar un error si no se pudo actualizar
             user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-            return render_template('editar_perfil.html', error=True, mensaje="Este nombre ya esta en uso.", user=user_data)
-    
-    # Cargar datos actuales del usuario para el formulario
+            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data)
+
+    # Obtener los datos actuales del usuario para mostrarlos en el formulario
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
     return render_template('editar_perfil.html', user=user_data)
 
@@ -139,10 +138,8 @@ def publicaciones():
     # Enriquecer cada publicación con el nombre de usuario
     for publicacion in publicaciones:
         usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
-        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
         if usuario:
             publicacion["nombre_usuario"] = usuario["username"]
-            publicacion["cant_likes"] = cant_likes
     
     # Obtener información del usuario en sesión
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
@@ -152,8 +149,6 @@ def publicaciones():
     foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
 
     return render_template('publicaciones.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
-
-
 @app.route('/api/publicaciones')
 def api_publicaciones():
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
