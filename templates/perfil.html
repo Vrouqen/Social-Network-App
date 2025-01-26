@@ -26,9 +26,9 @@
             <!-- <p>No hay foto de perfil disponible.</p> -->
         {% endif %}
         <br>
-        {{ user.username }}
-        {{ user.email }}
-        Siguiendo {{ cant_seguidos }}  Seguidores {{ cant_seguidores }}
+        <p>{{ user.username }}</p>
+        <p>{{ user.email }}</p>
+        <p>Siguiendo {{ cant_seguidos }}  Seguidores {{ cant_seguidores }}</p>
         
         <div>
             <p>Bienvenido, {{ user.username }}</p>
@@ -44,6 +44,8 @@
                 <li>
                     <p><strong>{{ publicacion.nombre_usuario }}</strong> - <em>{{ publicacion.fecha }}</em></p>
                     <p>{{ publicacion.contenido }}</p>
+                    <p>Likear {{ publicacion.cant_likes}}</p>
+                    <br>
                 </li>
             {% endfor %}
         </ul>
