@@ -7,16 +7,22 @@
 </head>
 <body>
     <h1>Editar Perfil</h1>
-    {% if error %}
-        <p style="color: red;">{{ mensaje }}</p>
-    {% endif %}
-    <form method="POST" enctype="multipart/form-data">
-        <label for="nuevo_nombre">Editar Nombre de Usuario:</label>
-        <input type="text" id="nuevo_nombre" name="nuevo_nombre" value="{{ user.username }}" required><br><br>
+    <form method="POST" action="{{ url_for('editar_perfil') }}">
+        <label for="nuevo_nombre">Nombre Usuario:</label>
+        <input type="text" id="nuevo_nombre" name="nuevo_nombre" value="{{ user['username'] }}" required><br><br>
     
-        <button type="submit">Guardar Cambios</button>
+        <label for="nuevo_mensaje">Descripción:</label><br>
+        <textarea id="nuevo_mensaje" name="nuevo_mensaje" rows="4">{{ user['mensaje'] }}</textarea><br><br>
+    
+        <button type="submit">Guardar cambios</button><br><br>
+    
+        {% if error %}
+        <p style="color: red;">{{ mensaje }}</p>
+        {% endif %}
     </form>
     
+    
+
     <a href="{{ url_for('perfil') }}">Volver al perfil</a>
 </body>
 </html>

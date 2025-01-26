@@ -61,14 +61,15 @@ class UsuarioDAO:
             return self.obtener_usuario_id(usuario_id) #Retorna los datos del usuario
         return None
 
-    def actualizar_nombre_usuario(self, id_usuario, nuevo_nombre):
+    def actualizar_datos_usuario(self, id_usuario, nuevo_nombre, nuevo_mensaje):
         try:
-            query = "EXEC ActualizarUsuario ?, ?"
-            self.cursor.execute(query, id_usuario, nuevo_nombre)
-            self.conexion.commit()  # Aquí no cambia nada, pero es correcto
+            # Llamada al procedimiento almacenado 'ActualizarUsuario'
+            query = "EXEC ActualizarUsuario @id_usuario=?, @nuevo_nombre=?, @nuevo_mensaje=?"
+            self.cursor.execute(query, (id_usuario, nuevo_nombre, nuevo_mensaje))
+            self.conexion.commit()
             return True
         except Exception as e:
-            print(f"Error al actualizar usuario: {e}")
+            print(f"Error al actualizar los datos del usuario: {e}")
             self.conexion.rollback()
             return False
 
