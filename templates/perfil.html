@@ -25,10 +25,10 @@
         {% else %}
             <!-- <p>No hay foto de perfil disponible.</p> -->
         {% endif %}
+        <br>
         {{ user.username }}
         {{ user.email }}
-        Seguiendo x  Seguidores x
-        Publicaciones
+        Siguiendo {{ cant_seguidos }}  Seguidores {{ cant_seguidores }}
         
         <div>
             <p>Bienvenido, {{ user.username }}</p>

@@ -75,7 +75,6 @@ class UsuarioDAO:
             self.conexion.rollback()
             return False
 
-
     def obtener_usuario_id(self, id_usuario): #Método que devuelve los datos del usuario ingresando su id
         query = "EXEC RecogerDatosUsuario ?"
         self.cursor.execute(query, id_usuario)
@@ -84,6 +83,22 @@ class UsuarioDAO:
             return {'id': result[0], 'username': result[1], 'email': result[2]} #Devuelve en un diccionario los datos del usuario
         return None
     
+    def obtener_cant_seguidores(self, id_usuario):
+        query = "EXEC ObtenerCantSeguidores ?"
+        self.cursor.execute(query, id_usuario)
+        result = self.cursor.fetchone()
+        if result: #Valida que haya retornado una respuesta
+            return result[0] # Devuelve el resultado de la consulta
+        return None
+    
+    def obtener_cant_seguidos(self, id_usuario):
+        query = "EXEC ObtenerCantSeguidos ?"
+        self.cursor.execute(query, id_usuario)
+        result = self.cursor.fetchone()
+        if result: #Valida que haya retornado una respuesta
+            return result[0] # Devuelve el resultado de la consulta
+        return None
+
     def registrar_usuario(self, nombre_usuario, correo, contrasena, confirmar_contrasena):
         try:
             query = """DECLARE @Mensaje NVARCHAR(MAX);

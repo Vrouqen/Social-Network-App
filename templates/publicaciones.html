@@ -25,10 +25,10 @@
         {{ user.email }}
     </div>
     <div> <!-- Crear publicación -->
-        <form>
-            <input type="text" placeholder="¿Qué quieres compartir?">
-            <input type="image" value="Insertar imagen">
-            <input type="submit" value="Publicar">
+        <form action="{{ url_for('crear_publicacion') }}" method="POST">
+            <p>¿Qué estás pensando?</p>
+            <textarea name="contenido" placeholder="Escribe tu publicación..." required></textarea>
+            <button type="submit">Publicar</button>
         </form>
     </div>
 
@@ -39,12 +39,6 @@
     <div><!-- Contenido -->
         
         <h1>Publicaciones</h1>
-            
-        <form action="{{ url_for('crear_publicacion') }}" method="POST">
-            <textarea name="contenido" placeholder="Escribe tu publicación..." required></textarea>
-            <button type="submit">Publicar</button>
-        </form>
-
         <h2>Publicaciones recientes</h2>
         <ul>
             {% for publicacion in publicaciones %}
@@ -54,7 +48,6 @@
                 </li>
             {% endfor %}
         </ul>
-
     </div>
     <div>
         {% if session['nombre_usuario'] %}

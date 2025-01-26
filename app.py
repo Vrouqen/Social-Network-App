@@ -175,11 +175,14 @@ def perfil():
     # Obtener información del usuario en sesión
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
 
+    cant_seguidores = usuario_dao.obtener_cant_seguidores(session['id_usuario']) # Obtener cantidad de seguidores
+    cant_seguidos = usuario_dao.obtener_cant_seguidos(session['id_usuario']) # Obtener cantidad de seguidos
+
     # Obtener foto de perfil
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
     foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
     
-    return render_template('perfil.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
+    return render_template('perfil.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil, cant_seguidores=cant_seguidores, cant_seguidos=cant_seguidos)
 
 @app.route('/logout')
 def logout():
