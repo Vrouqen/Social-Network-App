@@ -93,7 +93,7 @@ def editar_perfil():
 
         if resultado:
             session['nombre_usuario'] = nuevo_nombre  # Actualiza el nombre en la sesión
-            return redirect(url_for('perfil'))
+            return redirect(url_for('perfil', id_usuario=session['id_usuario']))
         else:
             # Mostrar un error si no se pudo actualizar
             user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])

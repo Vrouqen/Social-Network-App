@@ -104,7 +104,7 @@ class UsuarioDAO:
         self.cursor.execute(query, id_usuario)
         result = self.cursor.fetchone()
         if result: #Valida que haya retornado una respuesta
-            return {'id': result[0], 'username': result[1], 'email': result[2]} #Devuelve en un diccionario los datos del usuario
+            return {'id': result[0], 'username': result[1], 'email': result[2], 'descripcion':result[3]} #Devuelve en un diccionario los datos del usuario
         return None
     
     def obtener_cant_seguidores(self, id_usuario):
