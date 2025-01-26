@@ -139,8 +139,10 @@ def publicaciones():
     # Enriquecer cada publicación con el nombre de usuario
     for publicacion in publicaciones:
         usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
+        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
         if usuario:
             publicacion["nombre_usuario"] = usuario["username"]
+            publicacion["cant_likes"] = cant_likes
     
     # Obtener información del usuario en sesión
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
@@ -150,6 +152,8 @@ def publicaciones():
     foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
 
     return render_template('publicaciones.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
+
+
 @app.route('/api/publicaciones')
 def api_publicaciones():
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)

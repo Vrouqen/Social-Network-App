@@ -68,10 +68,31 @@ class UsuarioDAO:
         try:
             query = "EXEC ActualizarUsuario ?, ?"
             self.cursor.execute(query, id_usuario, nuevo_nombre)
-            self.conexion.commit()
+            self.conexion.commit()  # Aquí no cambia nada, pero es correcto
             return True
         except Exception as e:
             print(f"Error al actualizar usuario: {e}")
+            self.conexion.rollback()
+            return False
+
+
+    def likear_publicacion(self, id_publicacion, id_usuario):
+        try:
+            query = "EXEC LikearPublicacion ?, ?"
+            self.cursor.execute(query, id_publicacion, id_usuario)
+            self.conexion.commit()
+        except Exception as e:
+            print(f"Error al dar like: {e}")
+            self.conexion.rollback()
+            return False
+        
+    def unlikear_publicacion(self, id_publicacion, id_usuario):
+        try:
+            query = "EXEC UnlikearPublicacion ?, ?"
+            self.cursor.execute(query, id_publicacion, id_usuario)
+            self.conexion.commit()
+        except Exception as e:
+            print(f"Error al quitar like: {e}")
             self.conexion.rollback()
             return False
 
@@ -98,6 +119,15 @@ class UsuarioDAO:
         if result: #Valida que haya retornado una respuesta
             return result[0] # Devuelve el resultado de la consulta
         return None
+    
+    def obtener_cant_likes(self, id_publicacion):
+        query = "EXEC ObtenerCantLikes ?"
+        self.cursor.execute(query, id_publicacion)
+        result = self.cursor.fetchone()
+        if result: #Valida que haya retornado una respuesta
+            return result[0] # Devuelve el resultado de la consulta
+        return None
+
 
     def registrar_usuario(self, nombre_usuario, correo, contrasena, confirmar_contrasena):
         try:
@@ -118,9 +148,8 @@ class UsuarioDAO:
 # DAO para conexión a la colección Fotos_Perfil en MongoDB
 class FotoPerfilDAO:
     def __init__(self, conexion_mongo, ruta_foto_defecto="./static/images/foto_defecto.png"):
-        self.conexion = conexion_mongo  # Se guarda la conexión a MongoDB
-        self.collection = self.conexion.collection  # Referencia a la colección Fotos_Perfil
-        self.ruta_foto_defecto = ruta_foto_defecto  # Ruta de la foto por defecto
+        self.conexion = conexion_mongo
+        self.collection = self.conexion.db["Fotos_Perfil"]  # Definir explícitamente la colección
     
     def obtener_foto_perfil(self, user_id):
         try:
@@ -164,19 +193,13 @@ class PublicacionDAO:
         }
         self.collection.insert_one(nueva_publicacion)
         return nueva_publicacion
-        
-    def obtener_publicaciones(self, id_usuario=None):
-        try:
-            filtro = {"id_usuario": id_usuario} if id_usuario else {}  # Filtrar por usuario si se proporciona
-            publicaciones = list(self.collection.find(filtro).sort("fecha", -1))  # Ordenar por fecha descendente
-            
-            for publicacion in publicaciones:  # Convertir ObjectId a string y limpiar campos innecesarios
-                publicacion["_id"] = str(publicacion["_id"])
-            
-            return publicaciones
-        except Exception as e:
-            return {"error": f"Error al obtener publicaciones: {str(e)}"}
 
+    def obtener_publicaciones(self, id_usuario=None):
+        filtro = {"id_usuario": id_usuario} if id_usuario else {}
+        publicaciones = list(self.collection.find(filtro).sort("fecha", -1))
+        for publicacion in publicaciones:
+            publicacion["_id"] = str(publicacion["_id"])
+        return publicaciones
 
 class DatabaseFactory:
     def crear_usuario_dao(self, config):

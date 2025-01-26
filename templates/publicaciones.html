@@ -45,6 +45,8 @@
                 <li>
                     <p><strong>{{ publicacion.nombre_usuario }}</strong> - <em>{{ publicacion.fecha }}</em></p>
                     <p>{{ publicacion.contenido }}</p>
+                    <p>Likear {{ publicacion.cant_likes}}</p>
+                    <br>
                 </li>
             {% endfor %}
         </ul>
