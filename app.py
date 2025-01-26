@@ -13,7 +13,6 @@ SQL_SERVER_CONFIG = {
     'username': 'sa',
     'password': 'ProyectoGrupo5'
 }
-
 MONGO_DB_CONFIG = {
     'host': 'localhost',
     'port': 27017,
@@ -30,14 +29,13 @@ app.secret_key = 'una_clave_secreta'
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
-# Factory
-factory = DatabaseFactory()
+factory = DatabaseFactory() # Se crea la clase padre
 
-@app.route('/')
+@app.route('/') # Ruta por defecto
 def inicio():
     return render_template('inicio_sesion.html')
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST']) # Método de login
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -45,21 +43,17 @@ def login():
 
         # Obtener DAO de usuarios
         usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-        user_data = usuario_dao.verificar_usuario(username, password)
+        user_data = usuario_dao.verificar_usuario(username, password) # Se verifica que el usuario no exista en la base de datos
         
         if user_data:
             session['id_usuario'] = user_data['id']
             session['nombre_usuario'] = user_data['username']
             
-            # Obtener DAO de fotos de perfil
-            foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
-            profile_picture = foto_perfil_dao.obtener_foto_perfil(user_data['id'])
-            
-            return redirect(url_for('publicaciones'))
+            return redirect(url_for('publicaciones')) # Si el inicio es correcto se dirige a la feed de publicaciones
         
-        return redirect(url_for('inicio'))
+        return redirect(url_for('inicio')) # Si no es así se dirige al login nuevamente
     
-    return redirect(url_for('inicio'))
+    return redirect(url_for('inicio')) # Redirecciona a la página de login
 
 @app.route('/crear_cuenta', methods=['GET', 'POST'])
 def crear_cuenta():
@@ -71,7 +65,7 @@ def crear_cuenta():
         
         # Llamar al método del DAO para registrar el usuario
         usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-        resultado = usuario_dao.registrar_usuario(username, correo, contrasena, confirmar_contrasena)
+        resultado = usuario_dao.registrar_usuario(username, correo, contrasena, confirmar_contrasena) # Registra el usuario en la DB
         
         if resultado:  # Si el resultado es positivo, es decir, el registro fue exitoso
             return redirect(url_for('inicio'))  # Redirigir al inicio de sesión (inicio_sesion.html)
@@ -79,9 +73,7 @@ def crear_cuenta():
         # Si hubo un error en el registro, puedes redirigir o mostrar un mensaje de error
         return render_template('crear_cuenta.html', error=True, mensaje="Error en el registro.")
     
-    return render_template('crear_cuenta.html')
-
-
+    return render_template('crear_cuenta.html') # Redirecciona a la página de crear cuenta
 
 
 @app.route('/editar_perfil', methods=['GET', 'POST'])
@@ -111,88 +103,78 @@ def editar_perfil():
     return render_template('editar_perfil.html', user=user_data)
 
 
-
 @app.route('/crear_publicacion', methods=['POST'])
 def crear_publicacion():
-    if 'id_usuario' not in session:
-        return redirect(url_for('inicio'))
+    if 'id_usuario' not in session: # Verifica que exista una sesión activa
+        return redirect(url_for('inicio')) # De no ser así lo direcciona al login
 
     contenido = request.form['contenido']
     id_usuario = session['id_usuario']
     
     # Obtener el DAO de publicaciones
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    resultado = publicacion_dao.crear_publicacion(id_usuario, contenido)
+    resultado = publicacion_dao.crear_publicacion(id_usuario, contenido) # Se almacena la publicación en la base de datos
 
     return redirect(url_for('publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
 
 @app.route('/publicaciones')
 def publicaciones():
-    if 'id_usuario' not in session:
-        return redirect(url_for('inicio'))
+    if 'id_usuario' not in session: # Verifica que exista una sesión activa
+        return redirect(url_for('inicio')) # De no ser así lo direcciona al login
     
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    publicaciones = publicacion_dao.obtener_publicaciones()
+    publicaciones = publicacion_dao.obtener_publicaciones() # Se obtiene un JSON con las publicaciones
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
 
-    # Enriquecer cada publicación con el nombre de usuario
+    # Enriquecer cada publicación con nombre de usuario y cantidad de likes
     for publicacion in publicaciones:
-        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
-        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
-        if usuario:
-            publicacion["nombre_usuario"] = usuario["username"]
-            publicacion["cant_likes"] = cant_likes
+        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"]) # Obtiene la información del usuario por id
+        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"]) # Obtiene la cantidad de likes de la publicación
+        if usuario: 
+            publicacion["nombre_usuario"] = usuario["username"] # Se le asigna al nombre de usuario de la publicación el username de la consulta
+            publicacion["cant_likes"] = cant_likes # Se le asigna la cantidad de likes a la publicación
     
-    # Obtener información del usuario en sesión
-    user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+    user_data = usuario_dao.obtener_usuario_id(session['id_usuario']) # Obtener información del usuario en sesión
 
-    # Obtener foto de perfil
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
-    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
+    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario']) # Obtener foto de perfil
 
     return render_template('publicaciones.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
 
-
-@app.route('/api/publicaciones')
-def api_publicaciones():
-    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    publicaciones = publicacion_dao.obtener_publicaciones()
-    return jsonify(publicaciones)
-
 @app.route('/perfil')
 def perfil():
-    if 'id_usuario' not in session:
-        return redirect(url_for('inicio'))
+    if 'id_usuario' not in session: # Verifica que exista una sesión activa
+        return redirect(url_for('inicio')) # De no ser así lo direcciona al login
 
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    publicaciones = publicacion_dao.obtener_publicaciones(session['id_usuario'])
+    publicaciones = publicacion_dao.obtener_publicaciones(session['id_usuario']) # Se obtienen las publicaciones del usuario
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
     
-    # Enriquecer cada publicación con el nombre de usuario
+    # Enriquecer cada publicación con nombre de usuario y cantidad de likes
     for publicacion in publicaciones:
-        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
-        if usuario:
-            publicacion["nombre_usuario"] = usuario["username"]
+        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"]) # Obtiene la información del usuario por id
+        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"]) # Obtiene la cantidad de likes de la publicación
+        if usuario: 
+            publicacion["nombre_usuario"] = usuario["username"] # Se le asigna al nombre de usuario de la publicación el username de la consulta
+            publicacion["cant_likes"] = cant_likes # Se le asigna la cantidad de likes a la publicación
 
-    # Obtener información del usuario en sesión
-    user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+    user_data = usuario_dao.obtener_usuario_id(session['id_usuario']) # Obtener información del usuario en sesión
 
     cant_seguidores = usuario_dao.obtener_cant_seguidores(session['id_usuario']) # Obtener cantidad de seguidores
     cant_seguidos = usuario_dao.obtener_cant_seguidos(session['id_usuario']) # Obtener cantidad de seguidos
 
-    # Obtener foto de perfil
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
-    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
+    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario']) # Obtener foto de perfil
     
     return render_template('perfil.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil, cant_seguidores=cant_seguidores, cant_seguidos=cant_seguidos)
 
 @app.route('/logout')
-def logout():
+def logout(): # Se elimina la sesión activa
     session.pop('id_usuario', None)
     session.pop('nombre_usuario', None)
-    return redirect(url_for('inicio'))
+    return redirect(url_for('inicio')) # Se redirecciona al login
 
 if __name__ == '__main__':
     app.run(debug=True)

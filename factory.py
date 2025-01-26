@@ -8,16 +8,16 @@ from datetime import datetime
 # Clase abstracta para las conexiones
 class Conexion(ABC):
     def __init__(self, config):
-        self.config = config #Parámetros que tendrán la conexión
-        self.conectar() #Se conecta instantáneamente al crear el objeto conexión
+        self.config = config # Parámetros que tendrán la conexión
+        self.conectar() # Se conecta instantáneamente al crear el objeto conexión
     
-    @abstractmethod #Método que estará en todos los objetos que sen de tipo conexión
+    @abstractmethod # Método que estará en todos los objetos que sean de tipo conexión
     def conectar(self):
         pass
 
 # Conexión a SQL Server
 class ConexionSQLServer(Conexion):
-    def conectar(self): #Función que conecta a la base de datos
+    def conectar(self): # Función que conecta a la base de datos
         self.conexion = pyodbc.connect(
             f'DRIVER={self.config["driver"]};'
             f'SERVER={self.config["server"]};'
@@ -26,24 +26,21 @@ class ConexionSQLServer(Conexion):
             f'PWD={self.config["password"]}',
             autocommit=False
         )
-        self.cursor = self.conexion.cursor() #Se conecta con la configuración
+        self.cursor = self.conexion.cursor() # Se conecta con la configuración
     
-    def commit(self):
+    def commit(self): # Se confirma la transacción
         try:
-            print("Realizando commit...")
             self.conexion.commit()
-            print("Commit realizado correctamente.")
         except Exception as e:
             print(f"Error en commit: {e}")
     
-    def rollback(self):
-        """Revierte la transacción actual."""
+    def rollback(self): # Se revierte la transacción en caso de error
         self.conexion.rollback()
 
 # Conexión a MongoDB
 class ConexionMongo(Conexion):
     def conectar(self):
-        self.client = MongoClient( #Se crea la cadena de conexión
+        self.client = MongoClient( # Se crea la cadena de conexión
             f"mongodb://{self.config['username']}:{self.config['password']}@{self.config['host']}:{self.config['port']}/"
         )
         self.db = self.client[self.config["database"]] #Hace referencia la base de datos
@@ -52,8 +49,8 @@ class ConexionMongo(Conexion):
 # DAO para usuarios en SQL Server
 class UsuarioDAO:
     def __init__(self, conexion_sql):
-        self.conexion = conexion_sql #Obtiene la conexión del objeto concreto ConexionSQLServer
-        self.cursor = self.conexion.cursor #???? revisar conjuntamente a la linea 25
+        self.conexion = conexion_sql # Obtiene la conexión del objeto concreto ConexionSQLServer
+        self.cursor = self.conexion.cursor # Se ejecuta la conexión
     
     def verificar_usuario(self, username_or_email, password): #Método que devuelve el id de usuario si ingresa credenciales correctamente
         query = "EXEC ValidarInicioSesion ?, ?"
@@ -75,13 +72,12 @@ class UsuarioDAO:
             self.conexion.rollback()
             return False
 
-
     def likear_publicacion(self, id_publicacion, id_usuario):
         try:
-            query = "EXEC LikearPublicacion ?, ?"
+            query = "EXEC LikearPublicacion ?, ?" 
             self.cursor.execute(query, id_publicacion, id_usuario)
-            self.conexion.commit()
-        except Exception as e:
+            self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
+        except Exception as e: # En tal caso de que ocurra un error
             print(f"Error al dar like: {e}")
             self.conexion.rollback()
             return False
@@ -90,8 +86,8 @@ class UsuarioDAO:
         try:
             query = "EXEC UnlikearPublicacion ?, ?"
             self.cursor.execute(query, id_publicacion, id_usuario)
-            self.conexion.commit()
-        except Exception as e:
+            self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
+        except Exception as e: # En tal caso de que ocurra un error
             print(f"Error al quitar like: {e}")
             self.conexion.rollback()
             return False
@@ -128,18 +124,17 @@ class UsuarioDAO:
             return result[0] # Devuelve el resultado de la consulta
         return None
 
-
     def registrar_usuario(self, nombre_usuario, correo, contrasena, confirmar_contrasena):
         try:
             query = """DECLARE @Mensaje NVARCHAR(MAX);
                     EXEC CrearUsuario ?, ?, ?, ?, @Mensaje OUTPUT;
                     SELECT @Mensaje;"""
-            self.cursor.execute(query, (nombre_usuario, correo, contrasena, confirmar_contrasena))
+            self.cursor.execute(query,(nombre_usuario, correo, contrasena, confirmar_contrasena)) # Se ejectua el prodecimiento almacenado
 
             # Capturar el mensaje devuelto
             mensaje = self.cursor.fetchone()
             self.conexion.commit()
-            return mensaje[0] if mensaje else "Error desconocido al registrar el usuario."
+            return mensaje[0] if mensaje else "Error desconocido al registrar el usuario." # Obtiene mensaje de error
         except Exception as e:
             print(f"Error al registrar usuario: {e}")
             self.conexion.rollback()
@@ -150,6 +145,7 @@ class FotoPerfilDAO:
     def __init__(self, conexion_mongo, ruta_foto_defecto="./static/images/foto_defecto.png"):
         self.conexion = conexion_mongo
         self.collection = self.conexion.db["Fotos_Perfil"]  # Definir explícitamente la colección
+        self.ruta_foto_defecto = ruta_foto_defecto # Ruta para cargar la foto por defecto
     
     def obtener_foto_perfil(self, user_id):
         try:
@@ -174,27 +170,25 @@ class PublicacionDAO:
         self.collection = self.conexion.db["Publicaciones"]  # Referencia a la colección de publicaciones
 
     def obtener_nuevo_id_publicacion(self):
-        """Obtiene el último id_publicacion y lo incrementa."""
-        ultima_publicacion = self.collection.find_one({}, sort=[("id_publicacion", -1)])
+        ultima_publicacion = self.collection.find_one({}, sort=[("id_publicacion", -1)]) # Obtiene el id de la última publicación
         if ultima_publicacion and "id_publicacion" in ultima_publicacion:
-            return ultima_publicacion["id_publicacion"] + 1
+            return ultima_publicacion["id_publicacion"] + 1 # Incrementa en 1 el 1 de la publicación
         return 1  # Si no hay publicaciones, comenzamos desde 1.
 
     def crear_publicacion(self, id_usuario, contenido):
-        """Crea una nueva publicación con un id_publicacion autonumérico."""
-        nuevo_id = self.obtener_nuevo_id_publicacion()
-        nueva_publicacion = {
+        nuevo_id = self.obtener_nuevo_id_publicacion() # Se obtiene el id de la nueva publicación
+        nueva_publicacion = { # Se define en un diccionario los datos del nuevo registro
             "id_publicacion": nuevo_id,
             "id_usuario": id_usuario,
             "contenido": contenido,
-            "fecha": datetime.utcnow().isoformat(),
+            "fecha": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             "foto_publicacion": None,
             "id_respuesta": None
         }
-        self.collection.insert_one(nueva_publicacion)
+        self.collection.insert_one(nueva_publicacion) # Inserta el registro en la colección
         return nueva_publicacion
 
-    def obtener_publicaciones(self, id_usuario=None):
+    def obtener_publicaciones(self, id_usuario=None): # Obtiene las publicaciones de todos los usuarios o de uno en particular
         filtro = {"id_usuario": id_usuario} if id_usuario else {}
         publicaciones = list(self.collection.find(filtro).sort("fecha", -1))
         for publicacion in publicaciones:
