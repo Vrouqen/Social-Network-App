@@ -99,6 +99,16 @@ class UsuarioDAO:
             self.conexion.rollback()
             return False
 
+    def verificar_like(self,id_publicacion, id_usuario):
+        try:
+            query = " EXEC VerificarLike ?, ?"
+            self.cursor.execute(query, (id_publicacion, id_usuario))
+            resultado = self.cursor.fetchone()
+            return resultado[0] > 0
+        except Exception as e:
+            print(f"Error al verificar seguimiento: {e}")
+            return False
+
     def seguir_usuario(self, id_seguidor, id_seguido):
         try:
             query = "EXEC SeguirUsuario ?, ?" 
@@ -107,16 +117,6 @@ class UsuarioDAO:
         except Exception as e: # En tal caso de que ocurra un error
             print(f"Error al dar like: {e}")
             self.conexion.rollback()
-            return False
-        
-    def verificar_seguimiento(self, id_seguidor, id_seguido):
-        try:
-            query = " EXEC VerificarSeguimiento ?, ?"
-            self.cursor.execute(query, (id_seguidor, id_seguido))
-            resultado = self.cursor.fetchone()
-            return resultado[0] > 0
-        except Exception as e:
-            print(f"Error al verificar seguimiento: {e}")
             return False
 
     def dejar_seguir_usuario(self, id_seguidor, id_seguido):
@@ -127,7 +127,17 @@ class UsuarioDAO:
         except Exception as e: # En tal caso de que ocurra un error
             print(f"Error al dar like: {e}")
             self.conexion.rollback()
-            return False    
+            return False   
+    
+    def verificar_seguimiento(self, id_seguidor, id_seguido):
+        try:
+            query = " EXEC VerificarSeguimiento ?, ?"
+            self.cursor.execute(query, (id_seguidor, id_seguido))
+            resultado = self.cursor.fetchone()
+            return resultado[0] > 0
+        except Exception as e:
+            print(f"Error al verificar seguimiento: {e}")
+            return False
 
     def obtener_usuario_id(self, id_usuario): #Método que devuelve los datos del usuario ingresando su id
         query = "EXEC RecogerDatosUsuario ?"

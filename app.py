@@ -75,7 +75,6 @@ def crear_cuenta():
     
     return render_template('crear_cuenta.html') # Redirecciona a la página de crear cuenta
 
-
 @app.route('/editar_perfil', methods=['GET', 'POST'])
 def editar_perfil():
     if 'id_usuario' not in session:
@@ -102,7 +101,6 @@ def editar_perfil():
     # Obtener los datos actuales del usuario para mostrarlos en el formulario
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
     return render_template('editar_perfil.html', user=user_data)
-
 
 @app.route('/crear_publicacion', methods=['POST'])
 def crear_publicacion():
@@ -132,9 +130,11 @@ def publicaciones():
     for publicacion in publicaciones:
         usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"]) # Obtiene la información del usuario por id
         cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"]) # Obtiene la cantidad de likes de la publicación
+        verificar_like = usuario_dao.verificar_like(publicacion["id_publicacion"], session['id_usuario']) # Verifica que el usuario haya likeado
         if usuario: 
             publicacion["nombre_usuario"] = usuario["username"] # Se le asigna al nombre de usuario de la publicación el username de la consulta
-            publicacion["cant_likes"] = cant_likes # Se le asigna la cantidad de likes a la publicación
+            publicacion["cant_likes"] = cant_likes # Se le asigna la cantidad de likes a la publicación  
+            publicacion["like"] = verificar_like
     
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario']) # Obtener información del usuario en sesión
 
@@ -142,6 +142,22 @@ def publicaciones():
     foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario']) # Obtener foto de perfil
 
     return render_template('publicaciones.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
+
+@app.route('/likear_publicacion/<int:id_publicacion>')
+def likear_publicacion(id_publicacion):
+    id_usuario = session['id_usuario']
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+
+    likeado = usuario_dao.verificar_like(id_publicacion, id_usuario)
+
+    if likeado:
+        usuario_dao.unlikear_publicacion(id_publicacion, id_usuario)
+    else:
+        usuario_dao.likear_publicacion(id_publicacion, id_usuario)
+
+    next_url = request.args.get('next_url', url_for('publicaciones'))
+
+    return redirect(next_url)
 
 @app.route('/perfil/<int:id_usuario>')
 def perfil(id_usuario=None):
@@ -163,8 +179,11 @@ def perfil(id_usuario=None):
     for publicacion in publicaciones:
         usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
         cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
+        verificar_like = usuario_dao.verificar_like(publicacion["id_publicacion"], session['id_usuario']) 
+         # Verificar los likes en la publicaciones
         publicacion["cant_likes"] = cant_likes  
         publicacion["nombre_usuario"] = usuario['username']
+        publicacion["like"] = verificar_like
 
     cant_seguidores = usuario_dao.obtener_cant_seguidores(id_usuario)
     cant_seguidos = usuario_dao.obtener_cant_seguidos(id_usuario)
@@ -172,7 +191,7 @@ def perfil(id_usuario=None):
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
     foto_perfil = foto_perfil_dao.obtener_foto_perfil(id_usuario)
 
-    # 🔹 Verificar si el usuario en sesión ya sigue al perfil visitado
+    # Verificar si el usuario en sesión ya sigue al perfil visitado
     id_usuario_sesion = session['id_usuario']
     sigue_al_usuario = usuario_dao.verificar_seguimiento(id_usuario_sesion, id_usuario)
 

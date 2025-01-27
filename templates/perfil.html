@@ -52,7 +52,16 @@
                 <li>
                     <p><strong>{{ publicacion.nombre_usuario }}</strong> - <em>{{ publicacion.fecha }}</em></p>
                     <p>{{ publicacion.contenido }}</p>
-                    <p>Likear {{ publicacion.cant_likes}}</p>
+                    <form action="{{ url_for('likear_publicacion', id_publicacion=publicacion.id_publicacion) }}" method="GET">
+                        <input type="hidden" name="next_url" value="{{ request.path }}">
+                        
+                        {% if publicacion.like %}
+                            <button type="submit">Unlikear</button>
+                        {% else %}
+                            <button type="submit">Likear</button>
+                        {% endif %}
+                        {{ publicacion.cant_likes }}
+                    </form>
                     <br>
                 </li>
             {% endfor %}
