@@ -1,0 +1,121 @@
+.body1{
+    margin: 0 auto;
+    margin-top: 100px;
+    background-color: rgb(255, 255, 255);
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.container{
+    margin: 0 auto;
+    width: 30%;
+    min-height: 500px;
+    max-height: 600px;
+    background-color: rgb(10, 0, 48);
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border-radius: 37px ;
+}
+.container2{
+    margin: 0 auto;
+    width: 25%;
+    min-height: 50px;
+    max-height: 50px;
+    background-color:rgb(160, 160, 160);
+    padding: 10px;
+    border-radius: 0 0 20px 20px ;
+    align-items: center;
+    display: flex;
+}
+.container3{
+    margin: 0 auto;
+    width: 25%;
+    min-height: 50px;
+    max-height: 50px;
+    padding: 10px;
+    align-items: center;
+    display: flex;
+}
+.cubo1{
+    margin: 10px auto;
+    width: 26%;
+    height: 150px;
+    background-color: rgb(255, 255, 255);
+    border-radius: 400px ;
+    align-content: center;
+}
+.cubo2{ 
+    margin: 0% auto;
+    width: 80%;
+    height: 70px;
+    background-color:  rgb(10, 0, 48);
+    border-radius: 20px ;
+    align-content: center;
+}
+.cubo3{ 
+    margin: 5% auto;
+    width: 80%;
+    height: 70px;
+    background-color: rgb(255, 255, 255);
+    border-radius: 20px ;
+    display: flex;
+}
+.cubo3_1{ 
+    margin: 0;
+    width: 20%;
+    height: 100%;
+    background-color:   rgb(73, 132, 209);
+    align-content: center;
+    border-radius: 15px 0 0 15px;   
+}
+.cubo3_2{ 
+    margin: 0;
+    width: 80%;
+    height: 100%;
+    background-color:   rgb(177, 177, 177);
+    align-content: center;
+}
+
+
+
+.h11{
+    font-size: 22px;
+    text-align:center;
+    color: #ffffff;
+}
+
+.img_sesion{
+    width: 150px;
+    height: 150px;
+}
+.img_icono1{
+    padding-left: 10px;
+    width: 80%;
+    height: auto;
+}
+
+
+.text1{
+    width: 93.5%;
+    height: 92.5%;
+    border: none;
+    background-color:  rgb(221, 220, 220);
+    padding-left: 20px;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    color: black;
+    font-size: 16px;
+}
+.btn1{
+    margin: 0;
+    width: 100%;
+    height: 46px;
+    border: none;
+    background-color:  rgb(160, 160, 160);
+    padding-left: 20px;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(255, 255, 255);
+    font-size: 20px;
+}
+.btn1:hover{
+    background-color: rgb(160, 160, 160);
+    color: rgb(10, 0, 48);
+}
