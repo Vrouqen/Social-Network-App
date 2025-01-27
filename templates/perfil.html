@@ -31,11 +31,18 @@
         <p>{{ user.descripcion}}</p>
         <p>Siguiendo {{ cant_seguidos }}  Seguidores {{ cant_seguidores }}</p>
         
+        <form action="{{ url_for('seguir_usuario', id_usuario=user.id) }}" method="GET">
+            {% if sigue_al_usuario %}
+                <button type="submit">Dejar de seguir</button>
+            {% else %}
+                <button type="submit">Seguir</button>
+            {% endif %}
+        </form>
+
+
         <div>
             <p>Bienvenido, {{ user.username }}</p>
         </div>
-
-        
     </div>
 
     <div> <!-- Publicación -->

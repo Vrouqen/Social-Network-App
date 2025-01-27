@@ -172,10 +172,13 @@ def perfil(id_usuario=None):
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
     foto_perfil = foto_perfil_dao.obtener_foto_perfil(id_usuario)
 
+    # 🔹 Verificar si el usuario en sesión ya sigue al perfil visitado
+    id_usuario_sesion = session['id_usuario']
+    sigue_al_usuario = usuario_dao.verificar_seguimiento(id_usuario_sesion, id_usuario)
+
     return render_template('perfil.html', publicaciones=publicaciones, user=user_data, 
                            profile_picture=foto_perfil, cant_seguidores=cant_seguidores, 
-                           cant_seguidos=cant_seguidos)
-
+                           cant_seguidos=cant_seguidos, sigue_al_usuario=sigue_al_usuario)
 
 @app.route('/buscar_usuarios')
 def buscar_usuarios():
@@ -186,6 +189,20 @@ def buscar_usuarios():
 
     return jsonify(resultados)
 
+@app.route('/seguir_usuario/<int:id_usuario>')
+def seguir_usuario(id_usuario):
+    id_seguidor = session['id_usuario']
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+
+    sigue = usuario_dao.verificar_seguimiento(id_seguidor, id_usuario)
+
+    if sigue:
+        usuario_dao.dejar_seguir_usuario(id_seguidor, id_usuario)
+    else:
+        print(f"{id_seguidor} comenzará a seguir a {id_usuario}")
+        usuario_dao.seguir_usuario(id_seguidor, id_usuario)
+
+    return redirect(url_for('perfil', id_usuario=id_usuario))
 
 @app.route('/logout')
 def logout(): # Se elimina la sesión activa
