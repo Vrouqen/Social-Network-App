@@ -22,65 +22,85 @@
             }
         }
     </script>
-        
+    <link rel="stylesheet" href="{{url_for('static', filename='./CSS/publicaciones.css')}}">    
 </head>
 <body>
-    <div> <!-- Barra superior -->
-        <input type="text" id="searchUser" placeholder="Buscar usuario..." onkeyup="buscarUsuario()">
-        <ul id="resultadosBusqueda"></ul>
-    </div>
-    <div> <!-- Perfil -->
-        {% if profile_picture %}
-            <h3>Foto de Perfil:</h3>
+    <div class="barra_s"> <!-- Barra superior -->
+        <div class="s1">
+            {% if profile_picture %}
             <a href="{{ url_for('perfil', id_usuario=user.id) }}">
-                <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
+                <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto" class="img1">
             </a>
-        {% endif %}
+            {% endif %}
+        </div>
+        <div class="s2">
+            <input type="text" id="searchUser" placeholder="Buscar usuario..." onkeyup="buscarUsuario()">
+            <br>
+            <ul id="resultadosBusqueda"></ul>
+            
+        </div>
+        
+    </div>
+    <div class="contenido"> 
+        <!-- Perfil 
         <a href="{{ url_for('perfil', id_usuario=user.id) }}">
             {{ user.username }}
         </a>
         {{ user.email }}
-    </div>
-    <div> <!-- Crear publicación -->
+         -->
         <form action="{{ url_for('crear_publicacion') }}" method="POST">
-            <p>¿Qué estás pensando?</p>
-            <textarea name="contenido" placeholder="Escribe tu publicación..." required></textarea>
+            <p>¿Qué estás pensando? {{ user.username }}</p>
+            <textarea name="contenido" placeholder="Escribe tu publicación..." required></textarea><br><br>
             <button type="submit">Publicar</button>
         </form>
     </div>
-
-    <div>
-        <p>Bienvenido, {{ user.username }}</p>
-    </div>
-
-    <div><!-- Contenido -->
-        
-        <h1>Publicaciones</h1>
-        <h2>Publicaciones recientes</h2>
-        <ul>
-            {% for publicacion in publicaciones %}
-                <li>
-                    <p>
-                        <strong>
+    
+    <div class="contenido1"><!-- Contenido -->
+        <div class="text1">
+            <div class="complemento">
+            </div>
+            <div class="circulo">
+                <img src="{{url_for('static', filename='./Images/logo_pr.png')}}" class="img2">
+            </div>    
+            <div class="complemento">
+                
+            </div>
+            <br>
+        </div>
+        <div>
+            <ul>
+                {% for publicacion in publicaciones %}
+                    <li class="li1">
+                        <p class="p1">
                             <a href="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
-                                {{ publicacion.nombre_usuario }}
+                                    {{ publicacion.nombre_usuario }} 
                             </a>
-                        </strong> 
-                        - <em>{{ publicacion.fecha }}</em>
-                    </p>                    
-                    <p>{{ publicacion.contenido }}</p>
-                    <form action="{{ url_for('likear_publicacion', id_publicacion=publicacion.id_publicacion) }}" method="GET">
-                        {% if publicacion.like %}
-                            <button type="submit">Unlikear</button>
-                        {% else %}
-                            <button type="submit">Likear</button>
-                        {% endif %}
-                        {{ publicacion.cant_likes}}
-                    </form>
-                    <br>
-                </li>
-            {% endfor %}
-        </ul>
+                            ‎ ({{ publicacion.fecha }}) <!-- Texto Invisible [u+] -->
+                        </p>
+                        <div class="publiuser">                    
+                            <p>{{ publicacion.contenido }}</p>
+                        </div>  
+                        <div class="likeuser">
+                            
+                            <div>
+                                <form action="{{ url_for('likear_publicacion', id_publicacion=publicacion.id_publicacion) }}" method="GET">
+                                    {% if publicacion.like %}
+                                        <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/like.png')}}" class="img3"></button>
+                                    {% else %}
+                                        <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/fotounlike.jpg')}}" class="img3"></button>
+                                    {% endif %}
+                                </form>    
+                            </div>
+                            <div>
+                                {{ publicacion.cant_likes}}
+                                
+                            </div>
+                        </div>
+                        <br>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
     <div>
         {% if session['nombre_usuario'] %}
