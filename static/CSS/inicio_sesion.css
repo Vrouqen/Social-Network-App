@@ -3,72 +3,82 @@
     margin-top: 100px;
     background-color: rgb(255, 255, 255);
     font-family:Verdana, Geneva, Tahoma, sans-serif;
+    background-color: #02001b;
 }
 
 .container{
     margin: 0 auto;
-    width: 30%;
-    min-height: 500px;
-    max-height: 500px;
-    background-color: rgb(10, 0, 48);
+    width: 35%; 
+    background-color: rgba(10, 0, 48, 0.459);
     padding-top: 20px;
     padding-bottom: 20px;
     border-radius: 37px ;
+    border: 3px white solid;
 }
 .container2{
     margin: 0 auto;
     width: 25%;
     min-height: 50px;
     max-height: 50px;
-    background-color:rgb(160, 160, 160);
+    background-color:#05004491 ;
     padding: 10px;
     border-radius: 0 0 20px 20px ;
     align-items: center;
     display: flex;
+    border: 0 3px 3px 3px;
 }
 
 .cubo1{
-    margin: 10px auto;
-    width: 26%;
+    margin:0 auto;
+    width: 150px;
     height: 150px;
+    border-radius: 50%;
     background-color: rgb(255, 255, 255);
-    border-radius: 400px ;
     align-content: center;
 }
 .cubo2{ 
     margin: 5% auto;
     width: 80%;
     height: 70px;
-    background-color:  rgb(10, 0, 48);
+    background-color: rgba(10, 0, 48, 0);
     border-radius: 20px ;
     align-content: center;
 }
-.cubo3{ 
-    margin: 5% auto;
-    width: 80%;
-    height: 70px;
-    background-color: rgb(255, 255, 255);
-    border-radius: 20px ;
-    display: flex;
-}
-.cubo3_1{ 
+
+.cubo3_1{
+    display: flex; 
     margin: 0;
     width: 20%;
-    height: 100%;
-    background-color:   rgb(73, 132, 209);
+    height: 64px;
+    background-color: #1106ad80;
     align-content: center;
     border-radius: 15px 0 0 15px;   
 }
-.cubo3_2{ 
-    margin: 0;
+.cubo3 {
+    display: flex;
+    margin: 0 auto;
+    margin-bottom: 10px;
     width: 80%;
-    height: 100%;
-    background-color:   rgb(177, 177, 177);
-    align-content: center;
+    height: 67px;
+    border-radius: 20px ;
 }
 
-
-
+.text1{
+    width: 100%;
+    height: 62px;
+    margin: 0;
+    border-radius: 0 20px 20px 0;
+    border: none;
+    padding-left: 15px;
+    margin-bottom: 10px;
+    background-color: #02001b;
+    color: white;
+    font-size: 15px;
+}
+.cubo3_2{
+    display: flex;
+    flex: 1; 
+}
 .h11{
     font-size: 22px;
     text-align:center;
@@ -85,18 +95,6 @@
     height: auto;
 }
 
-
-.text1{
-    width: 93.5%;
-    height: 92.5%;
-    border: none;
-    background-color:  rgb(221, 220, 220);
-    padding-left: 20px;
-    font-family:Verdana, Geneva, Tahoma, sans-serif;
-    color: black;
-    font-size: 16px;
-}
-
 a {
     text-decoration: none; /* Eliminar subrayado */
     display: flex; /* Flexbox */
@@ -105,36 +103,18 @@ a {
     width: 100%;
     height: 46px;
 }
-
-input[type="button"] {
-    width: 100%;
-    height: 46px;
-    font-size: 20px;
-    text-align: center;
-    background-color: rgb(160, 160, 160);
-    color: rgb(255, 255, 255);
-    border-radius: 20px;
-    border: none;
-    cursor: pointer; /* Cambia el cursor cuando pasa por encima */
-}
-
-input[type="button"]:hover {
-    background-color: rgb(140, 140, 140);
-    color: rgb(10, 0, 48);
-}
-
 .btn1{
     margin: 0;
     width: 50%;
     height: 46px;
     border: none;
-    background-color:  rgb(160, 160, 160);
+    background-color: #05004400 ;
     padding-left: 20px;
     font-family:Verdana, Geneva, Tahoma, sans-serif;
     color: rgb(255, 255, 255);
     font-size: 20px;
 }
 .btn1:hover{
-    background-color: rgb(160, 160, 160);
-    color: rgb(10, 0, 48);
+    background-color: #ffffff;
+    color: #05004491 ;
 }

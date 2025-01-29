@@ -3,51 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename='./CSS/perfil.css')}}">    
     <title>App</title>
 </head>
 <body>
-    <div> <!-- Barra superior -->
-        <form>
-            <input type="text" placeholder="Buscar">
-            <input type="submit" value="Buscar">
-            <a href="{{ url_for('editar_perfil') }}">Editar Perfil</a>
-
-        </form>
-    </div>
-    <div><!-- Contenido -->
-        <a href="{{ url_for('publicaciones') }}">
-            Regresar a la feed
-        </a>
-
-        {% if profile_picture %}
-            <h3>Foto de Perfil:</h3>
-            <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
-        {% else %}
-            <!-- <p>No hay foto de perfil disponible.</p> -->
-        {% endif %}
-        <br>
-        <p>{{ user.username }}</p>
-        <p>{{ user.email }}</p>
-        <p>{{ user.descripcion}}</p>
-        <p>Siguiendo {{ cant_seguidos }}  Seguidores {{ cant_seguidores }}</p>
-        
-        <form action="{{ url_for('seguir_usuario', id_usuario=user.id) }}" method="GET">
-            {% if sigue_al_usuario %}
-                <button type="submit">Dejar de seguir</button>
-            {% else %}
-                <button type="submit">Seguir</button>
-            {% endif %}
-        </form>
-
-
+    <div class="barrasup">
+        <img src="{{url_for('static', filename='./Images/logop.jpg')}}" class="">
+        <a href="{{ url_for('editar_perfil') }}">Editar Perfil</a>
         <div>
-            <p>Bienvenido, {{ user.username }}</p>
+            <a href="{{ url_for('publicaciones') }}">Regresar</a>
+            
+            {% if session['nombre_usuario'] %}
+                <a href="{{ url_for('logout') }}">Salir</a>
+            {% else %}
+                <a href="{{ url_for('inicio') }}">Iniciar sesión</a>
+            {% endif  %}
         </div>
     </div>
-
-    <div> <!-- Publicación -->
-        <h2>Publicaciones de {{ user.username }}</h2>
+    <div class="containerp">
+        <div class="imagenc">
+            <p>Foto de perfil<p>
+            {% if profile_picture %}
+            <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
+            {% else %}
+            <!-- <p>No hay foto de perfil disponible.</p> -->
+            {% endif %}
+        </div>
+        <div class="datos">
+            <p>{{ user.username }}</p>
+            <p>{{ user.email }}</p>
+            <p>{{ user.descripcion}}</p>
+            <p>Seguidos {{ cant_seguidos }}  Seguidores {{ cant_seguidores }}</p>
+            <div>
+                <form action="{{ url_for('seguir_usuario', id_usuario=user.id) }}" method="GET">
+                    {% if sigue_al_usuario %}
+                        <button type="submit" class="btns">Siguiendo</button>
+                    {% else %}
+                        <button type="submit" class="btns">Seguir</button>
+                    {% endif %}
+                </form>
+            </div>
+            
+        </div>
+        
+        
+        
+    </div>
+    <div class="text1">
+        <div class="complemento">
+        </div>
+        <div class="circulo">
+            <img src="{{url_for('static', filename='./Images/logo_pr.png')}}" class="img2">
+        </div>    
+        <div class="complemento">
+        </div>
+        <br>
+    </div>
+    <div class="containerpu"> 
         <ul>
+                {% for publicacion in publicaciones %}
+                    <li class="li1">
+                        <p class="p1">
+                            <a href="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
+                                    {{ publicacion.nombre_usuario }} 
+                            </a> ({{ publicacion.fecha }}) <!-- Texto Invisible [u+] -->
+                        </p>
+                        <div class="publiuser">                    
+                            <p>{{ publicacion.contenido }}</p>
+                        </div>  
+                        <div class="likeuser">
+                            
+                            <div>
+                                <form action="{{ url_for('likear_publicacion', id_publicacion=publicacion.id_publicacion) }}" method="GET">
+                                    {% if publicacion.like %}
+                                        <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/like.png')}}" class="img3"></button>
+                                    {% else %}
+                                        <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/fotounlike.jpg')}}" class="img3"></button>
+                                    {% endif %}
+                                </form>    
+                            </div>
+                            <div>
+                                {{ publicacion.cant_likes}}
+                                
+                            </div>
+                        </div>
+                        <br>
+                    </li>
+                {% endfor %}
+            </ul>
+        <!--
+        <ul>
+
             {% for publicacion in publicaciones %}
                 <li>
                     <p><strong>{{ publicacion.nombre_usuario }}</strong> - <em>{{ publicacion.fecha }}</em></p>
@@ -66,13 +112,7 @@
                 </li>
             {% endfor %}
         </ul>
+        -->
     </div>
-    
-    {% if session['nombre_usuario'] %}
-        <a href="{{ url_for('logout') }}">Cerrar sesión</a>
-    {% else %}
-        <a href="{{ url_for('inicio') }}">Iniciar sesión</a>
-    {% endif %}
-
 </body>
 </html>

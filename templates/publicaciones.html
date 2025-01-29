@@ -37,7 +37,13 @@
             <input type="text" id="searchUser" placeholder="Buscar usuario..." onkeyup="buscarUsuario()">
             <br>
             <ul id="resultadosBusqueda"></ul>
-            
+        </div>
+        <div>
+            {% if session['nombre_usuario'] %}
+                <a href="{{ url_for('logout') }}">Salir</a>
+            {% else %}
+                <a href="{{ url_for('inicio') }}">Iniciar sesión</a>
+            {% endif %}
         </div>
         
     </div>
@@ -101,13 +107,6 @@
                 {% endfor %}
             </ul>
         </div>
-    </div>
-    <div>
-        {% if session['nombre_usuario'] %}
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
-        {% else %}
-            <a href="{{ url_for('inicio') }}">Iniciar sesión</a>
-        {% endif %}
     </div>
 </body>
 </html>
