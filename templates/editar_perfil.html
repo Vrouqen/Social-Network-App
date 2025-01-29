@@ -20,21 +20,23 @@
     
     <div class="container">
         <div class="dentro">
-            <form method="POST" action="{{ url_for('editar_perfil') }}">
+            <form method="POST" action="{{ url_for('editar_perfil') }}" enctype="multipart/form-data">
                 <label for="nuevo_nombre">Nombre Usuario:</label>
                 <input type="text" id="nuevo_nombre" name="nuevo_nombre" value="{{ user['username'] }}" required><br><br>
             
                 <label for="nuevo_mensaje">Descripción:</label><br>
                 <textarea id="nuevo_mensaje" name="nuevo_mensaje" rows="4">{{ user['mensaje'] }}</textarea><br><br>
-            
+                
+                <label for="foto_perfil">Cargar foto de perfil:</label>
+                <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*"><br><br>
+
                 <button type="submit">Guardar</button><br><br>
             
                 {% if error %}
                 <p style="color: red;">{{ mensaje }}</p>
                 {% endif %}
+            </form>
         </div>
-        
-    </form>
     </div>
     <a href="{{ url_for('perfil', id_usuario=user.id) }}">Regresar</a>
     

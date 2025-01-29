@@ -1,6 +1,7 @@
 import pyodbc
 from pymongo import MongoClient
 from abc import ABC, abstractmethod
+import factory
 import os
 import base64
 from datetime import datetime
@@ -167,6 +168,13 @@ class FotoPerfilDAO:
             return photo['foto_perfil']
         else:
             return self.obtener_foto_defecto() #Si no la encuentra llama a la imagen por defecto
+        
+    def actualizar_foto_perfil(self, user_id, foto_base64):
+        self.collection.update_one(
+            {'id_usuario': user_id},
+            {'$set': {'foto_perfil': foto_base64}},
+            upsert=True
+        )
 
     def obtener_foto_defecto(self):
         if os.path.exists(self.ruta_foto_defecto):
@@ -231,3 +239,4 @@ class DatabaseFactory:
     def crear_publicacion_dao(self, config):
         conexion = ConexionMongo(config)
         return PublicacionDAO(conexion)
+

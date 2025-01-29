@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_session import Session
 from factory import DatabaseFactory
 from flask import jsonify
+import base64
+import imghdr
 
 app = Flask(__name__)
 
@@ -81,7 +83,6 @@ def editar_perfil():
         return redirect(url_for('inicio'))
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-    
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
     foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
 
@@ -90,20 +91,30 @@ def editar_perfil():
         nuevo_mensaje = request.form['nuevo_mensaje']
         id_usuario = session['id_usuario']
 
-        # Actualizar tanto el nombre como el mensaje del usuario
+        # Procesar la imagen si se subió un archivo
+        if 'foto_perfil' in request.files:
+            file = request.files['foto_perfil']
+            if file and file.filename != '':
+                file_bytes = file.read()
+                foto_base64 = base64.b64encode(file_bytes).decode('utf-8')
+
+                # Detectar el tipo de imagen
+                tipo_imagen = imghdr.what(None, file_bytes)
+                if not tipo_imagen or tipo_imagen not in ['jpeg', 'png', 'gif']:
+                    return render_template('editar_perfil.html', error=True, mensaje="Formato de imagen no válido", user=user_data, profile_picture=foto_perfil)
+
+                foto_perfil_dao.actualizar_foto_perfil(id_usuario, foto_base64)
+
+        # Actualizar los datos del usuario en SQL Server
         resultado = usuario_dao.actualizar_datos_usuario(id_usuario, nuevo_nombre, nuevo_mensaje)
-        
-        
 
         if resultado:
-            session['nombre_usuario'] = nuevo_nombre  # Actualiza el nombre en la sesión
+            session['nombre_usuario'] = nuevo_nombre
             return redirect(url_for('perfil', id_usuario=session['id_usuario']))
         else:
-            # Mostrar un error si no se pudo actualizar
             user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data,  profile_picture=foto_perfil)
+            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data, profile_picture=foto_perfil)
 
-    # Obtener los datos actuales del usuario para mostrarlos en el formulario
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
     return render_template('editar_perfil.html', user=user_data, profile_picture=foto_perfil)
 
@@ -241,7 +252,6 @@ def seguir_usuario(id_usuario):
         usuario_dao.seguir_usuario(id_seguidor, id_usuario)
 
     return redirect(url_for('perfil', id_usuario=id_usuario))
-
 
 @app.route('/logout')
 def logout(): # Se elimina la sesión activa
