@@ -1,6 +1,6 @@
 .body1{
     margin: 0 auto;
-    margin-top: 100px;
+    margin-top: 70px;
     background-color: rgb(255, 255, 255);
     font-family:Verdana, Geneva, Tahoma, sans-serif;
     background-color: #02001b;
@@ -8,11 +8,13 @@
 
 .container{
     margin: 0 auto;
-    width: 35%; 
+    width: 40%;
+    min-height: 500px;
+    max-height: 600px;
     background-color: rgba(10, 0, 48, 0.459);
     padding-top: 20px;
     padding-bottom: 20px;
-    border-radius: 37px ;
+    border-radius: 30px;
     border: 3px white solid;
 }
 .container2{
@@ -20,65 +22,62 @@
     width: 25%;
     min-height: 50px;
     max-height: 50px;
-    background-color:#05004491 ;
+    background-color:#05004491  ;
     padding: 10px;
     border-radius: 0 0 20px 20px ;
     align-items: center;
     display: flex;
-    border: 0 3px 3px 3px;
 }
-
+.container3{
+    margin: 0 auto;
+    width: 25%;
+    min-height: 50px;
+    max-height: 50px;
+    padding: 10px;
+    align-items: center;
+    display: flex;
+}
 .cubo1{
-    margin:0 auto;
-    width: 150px;
+    margin: 10px auto;
+    width: 26%;
     height: 150px;
-    border-radius: 50%;
     background-color: rgb(255, 255, 255);
+    border-radius: 400px ;
     align-content: center;
 }
 .cubo2{ 
+    margin: 0% auto;
+    width: 80%;
+    height: 70px;
+    background-color:  rgb(10, 0, 48);
+    border-radius: 20px ;
+    align-content: center;
+}
+.cubo3{ 
     margin: 5% auto;
     width: 80%;
     height: 70px;
-    background-color: rgba(10, 0, 48, 0);
+    background-color: rgb(255, 255, 255);
     border-radius: 20px ;
-    align-content: center;
+    display: flex;
 }
-
-.cubo3_1{
-    display: flex; 
+.cubo3_1{ 
     margin: 0;
     width: 20%;
-    height: 64px;
-    background-color: #0c00b1d7;
+    height: 100%;
+    background-color:#07015280;
     align-content: center;
     border-radius: 15px 0 0 15px;   
 }
-.cubo3 {
-    display: flex;
-    margin: 0 auto;
-    margin-bottom: 10px;
+.cubo3_2{ 
+    margin: 0;
     width: 80%;
-    height: 67px;
-    border-radius: 20px ;
+    height: 100%;
+    background-color:   rgb(177, 177, 177);
+    align-content: center;
 }
 
-.text1{
-    width: 100%;
-    height: 62px;
-    margin: 0;
-    border-radius: 0 20px 20px 0;
-    border: none;
-    padding-left: 15px;
-    margin-bottom: 10px;
-    background-color: #02001b;
-    color: white;
-    font-size: 15px;
-}
-.cubo3_2{
-    display: flex;
-    flex: 1; 
-}
+
 .h11{
     font-size: 22px;
     text-align:center;
@@ -95,26 +94,28 @@
     height: auto;
 }
 
-a {
-    text-decoration: none; /* Eliminar subrayado */
-    display: flex; /* Flexbox */
-    justify-content: center; /* Centra horizontalmente */
-    align-items: center; /* Centra verticalmente */
-    width: 100%;
-    height: 46px;
+.text1{
+    width: 93.5%;
+    height: 92.5%;
+    border: none;
+    background-color: #02001b;
+    padding-left: 20px;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    color: rgb(255, 255, 255);
+    font-size: 16px;
 }
 .btn1{
     margin: 0;
-    width: 50%;
+    width: 100%;
     height: 46px;
     border: none;
-    background-color: #05004400 ;
+    background-color:  #05004491 ;
     padding-left: 20px;
     font-family:Verdana, Geneva, Tahoma, sans-serif;
     color: rgb(255, 255, 255);
     font-size: 20px;
 }
 .btn1:hover{
-    background-color: #ffffff;
-    color: #05004491 ;
+    background-color: rgb(255, 255, 255);
+    color: rgb(10, 0, 48);
 }

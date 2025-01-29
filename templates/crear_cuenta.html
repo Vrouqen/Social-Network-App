@@ -3,26 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{url_for('static', filename='./CSS/crear_cuenta.css')}}">
     <title>App</title>
 </head>
-<body>
-    <div> <!-- Div que divide la página a la mitad-->
-
-    </div>
-    <div><!-- Div que divide la página a la mitad-->
-        <h1>Registra tu cueenta **nombre de la app**</h1>
+<body class="body1">
         <form action="{{ url_for('crear_cuenta') }}" method="POST">
-            <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required>
-            <input type="email" name="correo" placeholder="Correo electrónico" required>
-            <input type="password" name="contrasena" placeholder="Contraseña" required>
-            <input type="password" name="confirmar_contrasena" placeholder="Confirmar contraseña" required>
-            <button type="submit">Crear cuenta</button>
+            <div class="container">
+                <div class="cubo2">
+                    <p class="h11"> Registrate en Nombre APP</p>
+                </div>
+                <div class="cubo3">
+                    <div class="cubo3_1">
+                        <img src="{{url_for('static', filename='./Images/logo_user.png')}}" class="img_icono1">
+                    </div>
+                    <div class="cubo3_2">
+                        <input type="text" name="nombre_usuario" placeholder="Nombre de usuario" required class="text1">
+                    </div>
+                </div>
+                <div class="cubo3">
+                    <div class="cubo3_1">
+                        <img src="{{url_for('static', filename='./Images/r_mail.png')}}" class="img_icono1">
+                    </div>
+                    <div class="cubo3_2">
+                        <input input type="email" name="correo" placeholder="Correo electrónico" required class="text1">
+                    </div>
+                </div>
+                <div class="cubo3">
+                    <div class="cubo3_1">
+                        <img src="{{url_for('static', filename='./Images/logo_contra.png')}}" class="img_icono1">
+                    </div>
+                    <div class="cubo3_2">
+                        <input type="password" name="contrasena" placeholder="Contraseña" required class="text1">
+                    </div>
+                </div>
+                <div class="cubo3">
+                    <div class="cubo3_1">
+                        <img src="{{url_for('static', filename='./Images/logo_contra.png')}}" class="img_icono1">
+                    </div>
+                    <div class="cubo3_2">
+                        <input type="password" name="confirmar_contrasena" placeholder="Confirmar contraseña" required class="text1">
+                    </div>
+                </div>
+
+            </div>
+            <div class="container2">
+                <input type="submit" value="Crear cuenta" class="btn1">
+            </div>
         </form>
-        
-        {% if error %}
+        <div class="container3">
+            {% if error %}
             <p style="color: red;">{{ mensaje }}</p>
-        {% endif %}
-    </div>
-    
+            {% endif %}
+        </div>
+        
+
 </body>
 </html>
