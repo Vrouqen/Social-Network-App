@@ -194,14 +194,14 @@ class PublicacionDAO:
             return ultima_publicacion["id_publicacion"] + 1 # Incrementa en 1 el 1 de la publicación
         return 1  # Si no hay publicaciones, comenzamos desde 1.
 
-    def crear_publicacion(self, id_usuario, contenido):
+    def crear_publicacion(self, id_usuario, contenido, foto_publicacion = None):
         nuevo_id = self.obtener_nuevo_id_publicacion() # Se obtiene el id de la nueva publicación
         nueva_publicacion = { # Se define en un diccionario los datos del nuevo registro
             "id_publicacion": nuevo_id,
             "id_usuario": id_usuario,
             "contenido": contenido,
             "fecha": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-            "foto_publicacion": None,
+            "foto_publicacion": foto_publicacion,
             "id_respuesta": None
         }
         self.collection.insert_one(nueva_publicacion) # Inserta el registro en la colección

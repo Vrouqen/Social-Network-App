@@ -126,9 +126,18 @@ def crear_publicacion():
     contenido = request.form['contenido']
     id_usuario = session['id_usuario']
     
-    # Obtener el DAO de publicaciones
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    resultado = publicacion_dao.crear_publicacion(id_usuario, contenido) # Se almacena la publicación en la base de datos
+     # Procesar la imagen si se subió un archivo
+    if 'foto_publicacion' in request.files:
+        file = request.files['foto_publicacion']
+        if file and file.filename != '':
+            file_bytes = file.read()
+            foto_base64 = base64.b64encode(file_bytes).decode('utf-8')
+            resultado = publicacion_dao.crear_publicacion(id_usuario, contenido,foto_base64) # Se almacena la publicación en la base de datos
+
+    resultado = publicacion_dao.crear_publicacion(id_usuario, contenido)
+    # Obtener el DAO de publicaciones
+
 
     return redirect(url_for('publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
 
