@@ -29,7 +29,7 @@
         <div class="s1">
             {% if profile_picture %}
             <a href="{{ url_for('perfil', id_usuario=user.id) }}">
-                <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto" class="img1">
+                <img src="{{ profile_picture }}" alt="Foto" class="img1">
             </a>
             {% endif %}
         </div>

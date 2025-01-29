@@ -2,8 +2,23 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_session import Session
 from factory import DatabaseFactory
 from flask import jsonify
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from werkzeug.utils import secure_filename
+from factory import ConexionMongo
+
+
 
 app = Flask(__name__)
+
+# Configuración de Cloudinary
+cloudinary.config(
+    cloud_name = "dwo5k3ubd",  
+    api_key = "637749211213579",     
+    api_secret = "65u1Xi5empnp0Mqdac6L8fd2wYc"  
+)
+
 
 # Configuración de las bases de datos
 SQL_SERVER_CONFIG = {
@@ -22,8 +37,19 @@ MONGO_DB_CONFIG = {
     'password': 'proyectogrupo5AS'
 }
 
+
 # Configuración de la clave secreta para la sesión
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 app.secret_key = 'una_clave_secreta'
+
+# Crear una instancia de conexión Mongo
+conexion_mongo = ConexionMongo(MONGO_DB_CONFIG)
+db = conexion_mongo.collection  # Obtiene la colección directamente
+
+# Función para verificar las extensiones de archivos permitidas
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 
 # Configurar la sesión
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -75,32 +101,64 @@ def crear_cuenta():
     
     return render_template('crear_cuenta.html') # Redirecciona a la página de crear cuenta
 
+from factory import FotoPerfilDAO  # Asegúrate de importar tu DAO
+
 @app.route('/editar_perfil', methods=['GET', 'POST'])
 def editar_perfil():
     if 'id_usuario' not in session:
-        return redirect(url_for('inicio'))
+        return redirect(url_for('inicio'))  # Redirige si no está logueado
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    foto_perfil_dao = FotoPerfilDAO(conexion_mongo)  # Instancia del DAO de fotos
 
     if request.method == 'POST':
-        nuevo_nombre = request.form['nuevo_nombre']
-        nuevo_mensaje = request.form['nuevo_mensaje']
-        id_usuario = session['id_usuario']
+        # Si el formulario es de actualizar datos de usuario
+        if 'nuevo_nombre' in request.form and 'nuevo_mensaje' in request.form:
+            nuevo_nombre = request.form['nuevo_nombre']
+            nuevo_mensaje = request.form['nuevo_mensaje']
+            id_usuario = session['id_usuario']
 
-        # Actualizar tanto el nombre como el mensaje del usuario
-        resultado = usuario_dao.actualizar_datos_usuario(id_usuario, nuevo_nombre, nuevo_mensaje)
+            # Actualizar tanto el nombre como el mensaje del usuario
+            resultado = usuario_dao.actualizar_datos_usuario(id_usuario, nuevo_nombre, nuevo_mensaje)
+            
+            if resultado:
+                session['nombre_usuario'] = nuevo_nombre  # Actualiza el nombre en la sesión
+                return redirect(url_for('editar_perfil'))  # Redirige al mismo perfil para reflejar los cambios
+            else:
+                # Mostrar un error si no se pudo actualizar
+                user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+                return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data)
 
-        if resultado:
-            session['nombre_usuario'] = nuevo_nombre  # Actualiza el nombre en la sesión
-            return redirect(url_for('perfil', id_usuario=session['id_usuario']))
-        else:
-            # Mostrar un error si no se pudo actualizar
-            user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data)
+        # Si el formulario es de subir una imagen
+        if 'file' in request.files:
+            file = request.files['file']
+
+            if file.filename == '':
+                return "No seleccionaste ningún archivo"
+
+            if file and allowed_file(file.filename):
+                try:
+                    # Subir imagen directamente a Cloudinary
+                    upload_result = cloudinary.uploader.upload(file)
+                    image_url = upload_result['secure_url']
+
+                    # Ahora usamos el id_usuario que está en la sesión
+                    id_usuario = session['id_usuario']
+
+                    # Utilizar el DAO para manejar la lógica de actualización
+                    foto_perfil_dao.actualizar_foto_perfil(id_usuario, image_url)
+
+                    # Dirigir al Perfil
+                    return redirect(url_for('editar_perfil')) 
+                except Exception as e:
+                    return f"Error al subir la imagen a Cloudinary: {str(e)}"
 
     # Obtener los datos actuales del usuario para mostrarlos en el formulario
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-    return render_template('editar_perfil.html', user=user_data)
+    foto_actual = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])  # Obtener la foto con el DAO
+    return render_template('editar_perfil.html', user=user_data, foto_actual=foto_actual)
+
+
 
 @app.route('/crear_publicacion', methods=['POST'])
 def crear_publicacion():

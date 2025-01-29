@@ -21,7 +21,7 @@
 
         {% if profile_picture %}
             <h3>Foto de Perfil:</h3>
-            <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
+            <img src="{{ profile_picture }}" alt="Foto de perfil">
         {% else %}
             <!-- <p>No hay foto de perfil disponible.</p> -->
         {% endif %}

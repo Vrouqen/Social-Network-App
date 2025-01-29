@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 import os
 import base64
 from datetime import datetime
+from pymongo import MongoClient
+import cloudinary
 
 # Clase abstracta para las conexiones
 class Conexion(ABC):
@@ -187,29 +189,46 @@ class UsuarioDAO:
             self.conexion.rollback()
             return f"Error al registrar usuario: {e}"
 
-# DAO para conexión a la colección Fotos_Perfil en MongoDB
 class FotoPerfilDAO:
-    def __init__(self, conexion_mongo, ruta_foto_defecto="./static/images/foto_defecto.png"):
+    def __init__(self, conexion_mongo, ruta_foto_defecto="https://res.cloudinary.com/dwo5k3ubd/image/upload/v1738103398/foto_defecto_ev2zsz.png"):
         self.conexion = conexion_mongo
         self.collection = self.conexion.db["Fotos_Perfil"]  # Definir explícitamente la colección
-        self.ruta_foto_defecto = ruta_foto_defecto # Ruta para cargar la foto por defecto
+        self.ruta_foto_defecto = ruta_foto_defecto  # Ruta para cargar la foto por defecto
     
     def obtener_foto_perfil(self, user_id):
         try:
-            photo = self.collection.find_one({'id_usuario': user_id}, {"_id": 0, "foto_perfil": 1}) #Busca la foto de perfil en la Base de Mongo
+            photo = self.collection.find_one({'id_usuario': user_id}, {"_id": 0, "foto_perfil": 1})  # Busca la foto de perfil en Mongo
             if photo:
                 return photo['foto_perfil']
             else:
-                return self.obtener_foto_defecto() #Si no la encuentra llama a la imagen por defecto
+                return self.ruta_foto_defecto  # Retorna la foto por defecto
         except Exception as e:
-            return self.obtener_foto_defecto()
+            return self.ruta_foto_defecto
 
-    def obtener_foto_defecto(self):
-        if os.path.exists(self.ruta_foto_defecto):
-            with open(self.ruta_foto_defecto, "rb") as image_file: #Carga la imagen por defecto desde los archivos del proyecto
-                return base64.b64encode(image_file.read()).decode("utf-8")
-        else:
-            return None
+    def actualizar_foto_perfil(self, user_id, nueva_foto_url):
+        try:
+            # Verificar si ya existe una foto de perfil
+            foto_actual = self.collection.find_one({'id_usuario': user_id})
+
+            if foto_actual:
+                # Si ya existe, eliminar la imagen anterior de Cloudinary
+                old_image_url = foto_actual.get('foto_perfil')  # Recuperar la URL antigua
+                if old_image_url:
+                    public_id = old_image_url.split('/')[-1].split('.')[0]  # Obtener el public_id
+                    cloudinary.api.delete_resources([public_id])  # Eliminar la imagen de Cloudinary
+
+                # Actualizar la URL en MongoDB
+                self.collection.update_one(
+                    {'id_usuario': user_id},
+                    {'$set': {'foto_perfil': nueva_foto_url}}
+                )
+            else:
+                # Insertar nueva foto si no existe
+                self.collection.insert_one({'id_usuario': user_id, 'foto_perfil': nueva_foto_url})
+
+        except Exception as e:
+            print(f"Error al actualizar la foto de perfil: {e}")
+
         
 class PublicacionDAO:
     def __init__(self, conexion_mongo):
