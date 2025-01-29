@@ -55,7 +55,7 @@
         {{ user.email }}
          -->
         <form action="{{ url_for('crear_publicacion') }}" method="POST">
-            <p>¿Qué estás pensando? {{ user.username }}</p>
+            <p>¿Qué estás pensando {{ user.username }}?</p>
             <textarea name="contenido" placeholder="Escribe tu publicación..." required></textarea><br><br>
             <button type="submit">Publicar</button>
         </form>
@@ -76,34 +76,77 @@
         <div>
             <ul>
                 {% for publicacion in publicaciones %}
-                    <li class="li1">
-                        <p class="p1">
-                            <a href="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
+                    {% if publicacion.id_respuesta == None %} 
+                        <li class="li1">
+                            <p class="p1">
+                                <a href="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
                                     {{ publicacion.nombre_usuario }} 
-                            </a>
-                            ‎ ({{ publicacion.fecha }}) <!-- Texto Invisible [u+] -->
-                        </p>
-                        <div class="publiuser">                    
-                            <p>{{ publicacion.contenido }}</p>
-                        </div>  
-                        <div class="likeuser">
-                            
-                            <div>
-                                <form action="{{ url_for('likear_publicacion', id_publicacion=publicacion.id_publicacion) }}" method="GET">
-                                    {% if publicacion.like %}
-                                        <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/like.png')}}" class="img3"></button>
-                                    {% else %}
-                                        <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/fotounlike.jpg')}}" class="img3"></button>
-                                    {% endif %}
-                                </form>    
+                                </a>
+                                ‎ ({{ publicacion.fecha }}) <!-- Texto Invisible [u+] -->
+                            </p>
+                            <div class="publiuser">                    
+                                <p>{{ publicacion.contenido }}</p>
+                                <form action="{{ url_for('responder_publicacion', id_publicacion=publicacion.id_publicacion) }}" method="POST">
+                                    <textarea name="respuesta" placeholder="Comentar" required></textarea>
+                                    <button type="submit">Enviar</button>
+                                </form>
+                            </div> 
+
+                            <div class="likeuser">
+                                <div>
+                                    <form action="{{ url_for('likear_publicacion', id_publicacion=publicacion.id_publicacion) }}" method="GET">
+                                        {% if publicacion.like %}
+                                            <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/like.png')}}" class="img3"></button>
+                                        {% else %}
+                                            <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/fotounlike.png')}}" class="img3"></button>
+                                        {% endif %}
+                                    </form>    
+                                </div>
+                                <div>
+                                    {{ publicacion.cant_likes}}
+                                </div>
                             </div>
-                            <div>
-                                {{ publicacion.cant_likes}}
-                                
+
+                            <div> <!-- Respuestas -->
+                                {% for respuesta in publicaciones %}
+                                {% if respuesta.id_respuesta == publicacion.id_publicacion %}
+                                    <li class="li2">
+                                        <p class="p1">
+                                            <a href="{{ url_for('perfil', id_usuario=respuesta.id_usuario) }}">
+                                                {{ respuesta.nombre_usuario }} 
+                                            </a> ({{ respuesta.fecha }})
+                                        </p>
+                                        <div class="publiuser">
+                                            <p>{{ respuesta.contenido }}</p>
+                                        </div>
+                                    </li>
+
+                                    <div class="likeuser">
+                                        <div>
+                                            <form action="{{ url_for('likear_publicacion', id_publicacion=respuesta.id_publicacion) }}" method="GET">
+                                                {% if respuesta.like %}
+                                                    <button type="submit" class="btnlike">
+                                                        <img src="{{ url_for('static', filename='Images/like.png') }}" class="img3">
+                                                    </button>
+                                                {% else %}
+                                                    <button type="submit" class="btnlike">
+                                                        <img src="{{ url_for('static', filename='Images/fotounlike.png') }}" class="img3">
+                                                    </button>
+                                                {% endif %}
+                                            </form>    
+                                        </div>
+                                        <div>
+                                            {{ respuesta.cant_likes }}
+                                        </div>
+                                    </div>
+
+                                {% endif %}
+                            {% endfor %}
                             </div>
-                        </div>
-                        <br>
-                    </li>
+    
+                            <br>
+                        </li>
+                    {% endif %}
                 {% endfor %}
             </ul>
         </div>

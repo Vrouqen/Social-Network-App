@@ -81,6 +81,9 @@ def editar_perfil():
         return redirect(url_for('inicio'))
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    
+    foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
+    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
 
     if request.method == 'POST':
         nuevo_nombre = request.form['nuevo_nombre']
@@ -89,6 +92,8 @@ def editar_perfil():
 
         # Actualizar tanto el nombre como el mensaje del usuario
         resultado = usuario_dao.actualizar_datos_usuario(id_usuario, nuevo_nombre, nuevo_mensaje)
+        
+        
 
         if resultado:
             session['nombre_usuario'] = nuevo_nombre  # Actualiza el nombre en la sesión
@@ -96,11 +101,11 @@ def editar_perfil():
         else:
             # Mostrar un error si no se pudo actualizar
             user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data)
+            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data,  profile_picture=foto_perfil)
 
     # Obtener los datos actuales del usuario para mostrarlos en el formulario
     user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-    return render_template('editar_perfil.html', user=user_data)
+    return render_template('editar_perfil.html', user=user_data, profile_picture=foto_perfil)
 
 @app.route('/crear_publicacion', methods=['POST'])
 def crear_publicacion():
@@ -113,6 +118,20 @@ def crear_publicacion():
     # Obtener el DAO de publicaciones
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
     resultado = publicacion_dao.crear_publicacion(id_usuario, contenido) # Se almacena la publicación en la base de datos
+
+    return redirect(url_for('publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
+
+@app.route('/responder_publicacion/<int:id_publicacion>', methods=['POST'])
+def responder_publicacion(id_publicacion):
+    if 'id_usuario' not in session: # Verifica que exista una sesión activa
+        return redirect(url_for('inicio')) # De no ser así lo direcciona al login
+
+    contenido = request.form['respuesta']
+    id_usuario = session['id_usuario']
+    
+    # Obtener el DAO de publicaciones
+    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
+    resultado = publicacion_dao.responder_publicacion(id_usuario, contenido, id_publicacion) # Se almacena la publicación en la base de datos
 
     return redirect(url_for('publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
 
@@ -222,6 +241,7 @@ def seguir_usuario(id_usuario):
         usuario_dao.seguir_usuario(id_seguidor, id_usuario)
 
     return redirect(url_for('perfil', id_usuario=id_usuario))
+
 
 @app.route('/logout')
 def logout(): # Se elimina la sesión activa

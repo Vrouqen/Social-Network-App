@@ -62,16 +62,11 @@ class UsuarioDAO:
         return None
 
     def actualizar_datos_usuario(self, id_usuario, nuevo_nombre, nuevo_mensaje):
-        try:
-            # Llamada al procedimiento almacenado 'ActualizarUsuario'
-            query = "EXEC ActualizarUsuario @id_usuario=?, @nuevo_nombre=?, @nuevo_mensaje=?"
-            self.cursor.execute(query, (id_usuario, nuevo_nombre, nuevo_mensaje))
-            self.conexion.commit()
-            return True
-        except Exception as e:
-            print(f"Error al actualizar los datos del usuario: {e}")
-            self.conexion.rollback()
-            return False
+        # Llamada al procedimiento almacenado 'ActualizarUsuario'
+        query = "EXEC ActualizarUsuario @id_usuario=?, @nuevo_nombre=?, @nuevo_mensaje=?"
+        self.cursor.execute(query, (id_usuario, nuevo_nombre, nuevo_mensaje))
+        self.conexion.commit()
+        return True
 
     def buscar_usuarios(self, query):
         query_sql = "EXEC BuscarUsuarios ?"  
@@ -80,64 +75,36 @@ class UsuarioDAO:
         return [{'id': row[0], 'username': row[1]} for row in resultados] if resultados else []
 
     def likear_publicacion(self, id_publicacion, id_usuario):
-        try:
-            query = "EXEC LikearPublicacion ?, ?" 
-            self.cursor.execute(query, id_publicacion, id_usuario)
-            self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
-        except Exception as e: # En tal caso de que ocurra un error
-            print(f"Error al dar like: {e}")
-            self.conexion.rollback()
-            return False
+        query = "EXEC LikearPublicacion ?, ?" 
+        self.cursor.execute(query, id_publicacion, id_usuario)
+        self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
         
     def unlikear_publicacion(self, id_publicacion, id_usuario):
-        try:
-            query = "EXEC UnlikearPublicacion ?, ?"
-            self.cursor.execute(query, id_publicacion, id_usuario)
-            self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
-        except Exception as e: # En tal caso de que ocurra un error
-            print(f"Error al quitar like: {e}")
-            self.conexion.rollback()
-            return False
+        query = "EXEC UnlikearPublicacion ?, ?"
+        self.cursor.execute(query, id_publicacion, id_usuario)
+        self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
 
     def verificar_like(self,id_publicacion, id_usuario):
-        try:
-            query = " EXEC VerificarLike ?, ?"
-            self.cursor.execute(query, (id_publicacion, id_usuario))
-            resultado = self.cursor.fetchone()
-            return resultado[0] > 0
-        except Exception as e:
-            print(f"Error al verificar seguimiento: {e}")
-            return False
+        query = " EXEC VerificarLike ?, ?"
+        self.cursor.execute(query, (id_publicacion, id_usuario))
+        resultado = self.cursor.fetchone()
+        return resultado[0] > 0
 
     def seguir_usuario(self, id_seguidor, id_seguido):
-        try:
-            query = "EXEC SeguirUsuario ?, ?" 
-            self.cursor.execute(query, id_seguidor, id_seguido)
-            self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
-        except Exception as e: # En tal caso de que ocurra un error
-            print(f"Error al dar like: {e}")
-            self.conexion.rollback()
-            return False
+        query = "EXEC SeguirUsuario ?, ?" 
+        self.cursor.execute(query, id_seguidor, id_seguido)
+        self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
 
     def dejar_seguir_usuario(self, id_seguidor, id_seguido):
-        try:
-            query = "EXEC DejarSeguirUsuario ?, ?" 
-            self.cursor.execute(query, id_seguidor, id_seguido)
-            self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
-        except Exception as e: # En tal caso de que ocurra un error
-            print(f"Error al dar like: {e}")
-            self.conexion.rollback()
-            return False   
+        query = "EXEC DejarSeguirUsuario ?, ?" 
+        self.cursor.execute(query, id_seguidor, id_seguido)
+        self.conexion.commit() # Ejecuta el prodecimiento almacenado para insertar registros
     
     def verificar_seguimiento(self, id_seguidor, id_seguido):
-        try:
-            query = " EXEC VerificarSeguimiento ?, ?"
-            self.cursor.execute(query, (id_seguidor, id_seguido))
-            resultado = self.cursor.fetchone()
-            return resultado[0] > 0
-        except Exception as e:
-            print(f"Error al verificar seguimiento: {e}")
-            return False
+        query = " EXEC VerificarSeguimiento ?, ?"
+        self.cursor.execute(query, (id_seguidor, id_seguido))
+        resultado = self.cursor.fetchone()
+        return resultado[0] > 0
 
     def obtener_usuario_id(self, id_usuario): #Método que devuelve los datos del usuario ingresando su id
         query = "EXEC RecogerDatosUsuario ?"
@@ -195,14 +162,11 @@ class FotoPerfilDAO:
         self.ruta_foto_defecto = ruta_foto_defecto # Ruta para cargar la foto por defecto
     
     def obtener_foto_perfil(self, user_id):
-        try:
-            photo = self.collection.find_one({'id_usuario': user_id}, {"_id": 0, "foto_perfil": 1}) #Busca la foto de perfil en la Base de Mongo
-            if photo:
-                return photo['foto_perfil']
-            else:
-                return self.obtener_foto_defecto() #Si no la encuentra llama a la imagen por defecto
-        except Exception as e:
-            return self.obtener_foto_defecto()
+        photo = self.collection.find_one({'id_usuario': user_id}, {"_id": 0, "foto_perfil": 1}) #Busca la foto de perfil en la Base de Mongo
+        if photo:
+            return photo['foto_perfil']
+        else:
+            return self.obtener_foto_defecto() #Si no la encuentra llama a la imagen por defecto
 
     def obtener_foto_defecto(self):
         if os.path.exists(self.ruta_foto_defecto):
@@ -231,6 +195,19 @@ class PublicacionDAO:
             "fecha": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             "foto_publicacion": None,
             "id_respuesta": None
+        }
+        self.collection.insert_one(nueva_publicacion) # Inserta el registro en la colección
+        return nueva_publicacion
+
+    def responder_publicacion(self, id_usuario, contenido, id_publicacion):
+        nuevo_id = self.obtener_nuevo_id_publicacion() # Se obtiene el id de la nueva publicación
+        nueva_publicacion = { # Se define en un diccionario los datos del nuevo registro
+            "id_publicacion": nuevo_id,
+            "id_usuario": id_usuario,
+            "contenido": contenido,
+            "fecha": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            "foto_publicacion": None,
+            "id_respuesta": id_publicacion
         }
         self.collection.insert_one(nueva_publicacion) # Inserta el registro en la colección
         return nueva_publicacion

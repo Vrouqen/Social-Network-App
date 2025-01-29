@@ -25,8 +25,6 @@
             <p>Foto de perfil<p>
             {% if profile_picture %}
             <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
-            {% else %}
-            <!-- <p>No hay foto de perfil disponible.</p> -->
             {% endif %}
         </div>
         <div class="datos">
@@ -36,10 +34,12 @@
             <p>Seguidos {{ cant_seguidos }}  Seguidores {{ cant_seguidores }}</p>
             <div>
                 <form action="{{ url_for('seguir_usuario', id_usuario=user.id) }}" method="GET">
-                    {% if sigue_al_usuario %}
-                        <button type="submit" class="btns">Siguiendo</button>
-                    {% else %}
-                        <button type="submit" class="btns">Seguir</button>
+                    {% if user.id != session['id_usuario']  %}
+                        {% if sigue_al_usuario %}
+                            <button type="submit" class="btns">Siguiendo</button>
+                        {% else %}
+                            <button type="submit" class="btns">Seguir</button>
+                        {% endif %}
                     {% endif %}
                 </form>
             </div>
