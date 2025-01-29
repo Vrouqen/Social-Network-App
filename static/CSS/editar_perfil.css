@@ -69,12 +69,13 @@ a{
     background-color: #02001b;
 }
 .dentro button{
-    width: 20%;
-    height: 30px;
+    width: 25%;
+    height: 40px;
     border-radius: 10px;
     border: 3px solid #05004491;
     color: white;
     background-color: #02001b;
+    font-size: 18px;
 }
 .dentro button:hover{
     border: 3px solid #02001b;
@@ -84,4 +85,23 @@ a{
 .img1{
     width: 100%;
     border-radius: 50%;
+}
+.cargar{
+    color:white;
+    background-color: #02001b;
+    border-radius: 20px ;
+    border: 2px white solid;
+    padding: 2px;
+    display: none;
+}
+
+.label1{
+    font-size: 5px;
+    padding: 5px;
+}
+.label1:hover{
+    border-radius: 20px ;
+    border: 2px #02001b8a solid;
+    background-color: white;
+    color: #02001b;
 }

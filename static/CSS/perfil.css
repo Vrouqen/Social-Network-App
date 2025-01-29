@@ -114,6 +114,9 @@ ul{
     display: flex;
     border-radius: 20px;
 }
+.containerpu ul{
+    margin: 0 auto;
+}
 
 .publiuser{
     margin:0 10%;
@@ -125,7 +128,7 @@ ul{
     text-align: left;
     border-radius: 10px;
     border: 3px solid;
-    border-color:  #05004491;
+    border-color:  #00307969;
 }
 .likeuser{
     margin:1% 9%;
@@ -146,7 +149,7 @@ ul{
 .li1{
     border-bottom: 2px  #050044b4 solid;
     width: 80%;
-    margin: 0 10%;
+    margin: 0 10% auto;
     display: block;
 }
 .p1{
