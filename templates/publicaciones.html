@@ -75,9 +75,6 @@
                     {% if publicacion.id_respuesta == None %} 
                         <li class="li1">
                             <p class="p1">
-                                {% if publicacion.foto_publicacion %}
-                                    <img src="data:image/png;base64,{{ publicacion.foto_publicacion }}" alt="Foto">
-                                {% endif %}
                                 <a href="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
                                     {{ publicacion.nombre_usuario }} 
                                 </a>
@@ -85,6 +82,10 @@
                             </p>
                             <div class="publiuser">   
                                 <p>{{ publicacion.contenido }}</p>
+                                
+                                {% if publicacion.foto_publicacion %}
+                                    <img src="data:image/png;base64,{{ publicacion.foto_publicacion }}" alt="Foto">
+                                {% endif %}
                             </div> 
 
                             <div class="likeuser">
@@ -109,7 +110,7 @@
                             </div>
 
                             <div> <!-- Respuestas -->
-                                {% for respuesta in publicaciones %}
+                            {% for respuesta in publicaciones %}
                                 {% if respuesta.id_respuesta == publicacion.id_publicacion %}
                                     <li class="li2">
                                         <p class="p1">

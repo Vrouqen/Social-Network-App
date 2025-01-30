@@ -4,6 +4,8 @@ from factory import DatabaseFactory
 from flask import jsonify
 import base64
 import imghdr
+from PIL import Image
+import io
 
 app = Flask(__name__)
 
@@ -77,47 +79,6 @@ def crear_cuenta():
     
     return render_template('crear_cuenta.html') # Redirecciona a la página de crear cuenta
 
-@app.route('/editar_perfil', methods=['GET', 'POST'])
-def editar_perfil():
-    if 'id_usuario' not in session:
-        return redirect(url_for('inicio'))
-
-    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-    foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
-    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
-
-    if request.method == 'POST':
-        nuevo_nombre = request.form['nuevo_nombre']
-        nuevo_mensaje = request.form['nuevo_mensaje']
-        id_usuario = session['id_usuario']
-
-        # Procesar la imagen si se subió un archivo
-        if 'foto_perfil' in request.files:
-            file = request.files['foto_perfil']
-            if file and file.filename != '':
-                file_bytes = file.read()
-                foto_base64 = base64.b64encode(file_bytes).decode('utf-8')
-
-                # Detectar el tipo de imagen
-                tipo_imagen = imghdr.what(None, file_bytes)
-                if not tipo_imagen or tipo_imagen not in ['jpeg', 'png', 'gif']:
-                    return render_template('editar_perfil.html', error=True, mensaje="Formato de imagen no válido", user=user_data, profile_picture=foto_perfil)
-
-                foto_perfil_dao.actualizar_foto_perfil(id_usuario, foto_base64)
-
-        # Actualizar los datos del usuario en SQL Server
-        resultado = usuario_dao.actualizar_datos_usuario(id_usuario, nuevo_nombre, nuevo_mensaje)
-
-        if resultado:
-            session['nombre_usuario'] = nuevo_nombre
-            return redirect(url_for('perfil', id_usuario=session['id_usuario']))
-        else:
-            user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data, profile_picture=foto_perfil)
-
-    user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-    return render_template('editar_perfil.html', user=user_data, profile_picture=foto_perfil)
-
 @app.route('/crear_publicacion', methods=['POST'])
 def crear_publicacion():
     if 'id_usuario' not in session: # Verifica que exista una sesión activa
@@ -131,13 +92,19 @@ def crear_publicacion():
     if 'foto_publicacion' in request.files:
         file = request.files['foto_publicacion']
         if file and file.filename != '':
-            file_bytes = file.read()
-            foto_base64 = base64.b64encode(file_bytes).decode('utf-8')
+            image = Image.open(file)
+
+            if image.width > 625:
+                ratio = 625 / image.width
+                new_height = int(image.height * ratio)
+                image = image.resize((625, new_height), Image.LANCZOS)
+
+            buffered = io.BytesIO()
+            image.save(buffered, format="PNG")
+            foto_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
             resultado = publicacion_dao.crear_publicacion(id_usuario, contenido,foto_base64) # Se almacena la publicación en la base de datos
 
     resultado = publicacion_dao.crear_publicacion(id_usuario, contenido)
-    # Obtener el DAO de publicaciones
-
 
     return redirect(url_for('publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
 
@@ -213,13 +180,23 @@ def perfil(id_usuario=None):
         return redirect(url_for('publicaciones'))  # Redirige si el usuario no existe
 
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    publicaciones = publicacion_dao.obtener_publicaciones(id_usuario)  # Obtener publicaciones del usuario
+    publicaciones_usuario = publicacion_dao.obtener_publicaciones(id_usuario)  # Obtener publicaciones del usuario
+    publicaciones = publicacion_dao.obtener_publicaciones()
+
+    for publicacion in publicaciones_usuario:
+        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
+        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
+        verificar_like = usuario_dao.verificar_like(publicacion["id_publicacion"], session['id_usuario']) 
+        # Verificar los likes en la publicaciones
+        publicacion["cant_likes"] = cant_likes  
+        publicacion["nombre_usuario"] = usuario['username']
+        publicacion["like"] = verificar_like
 
     for publicacion in publicaciones:
         usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
         cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
         verificar_like = usuario_dao.verificar_like(publicacion["id_publicacion"], session['id_usuario']) 
-         # Verificar los likes en la publicaciones
+        # Verificar los likes en la publicaciones
         publicacion["cant_likes"] = cant_likes  
         publicacion["nombre_usuario"] = usuario['username']
         publicacion["like"] = verificar_like
@@ -234,9 +211,66 @@ def perfil(id_usuario=None):
     id_usuario_sesion = session['id_usuario']
     sigue_al_usuario = usuario_dao.verificar_seguimiento(id_usuario_sesion, id_usuario)
 
-    return render_template('perfil.html', publicaciones=publicaciones, user=user_data, 
+    return render_template('perfil.html', publicaciones_usuario=publicaciones_usuario, publicaciones=publicaciones, user=user_data, 
                            profile_picture=foto_perfil, cant_seguidores=cant_seguidores, 
                            cant_seguidos=cant_seguidos, sigue_al_usuario=sigue_al_usuario)
+
+@app.route('/editar_perfil', methods=['GET', 'POST'])
+def editar_perfil():
+    if 'id_usuario' not in session:
+        return redirect(url_for('inicio'))
+
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
+    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
+
+    if request.method == 'POST':
+        nuevo_nombre = request.form['nuevo_nombre']
+        nuevo_mensaje = request.form['nuevo_mensaje']
+        id_usuario = session['id_usuario']
+
+        # Procesar la imagen si se subió un archivo
+        if 'foto_perfil' in request.files:
+            file = request.files['foto_perfil']
+            if file and file.filename != '':
+                file_bytes = file.read()
+                
+                tipo_imagen = imghdr.what(None, file_bytes)
+                if not tipo_imagen or tipo_imagen not in ['jpeg', 'png', 'gif']:
+                    return render_template('editar_perfil.html', error=True, mensaje="Formato de imagen no válido", user=user_data, profile_picture=foto_perfil)
+
+                # Abrir la imagen y hacerla cuadrada
+                image = Image.open(io.BytesIO(file_bytes))
+
+                # Determinar el lado más corto para recortar
+                min_side = min(image.width, image.height)
+                left = (image.width - min_side) // 2
+                top = (image.height - min_side) // 2
+                right = left + min_side
+                bottom = top + min_side
+
+                image = image.crop((left, top, right, bottom))  # Recortar a cuadrado
+                image = image.resize((400, 400), Image.LANCZOS)  # Redimensionar a 400x400 px
+
+                # Convertir la imagen editada a Base64
+                buffered = io.BytesIO()
+                image.save(buffered, format="PNG")
+                foto_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+                foto_perfil_dao.actualizar_foto_perfil(id_usuario, foto_base64)
+
+        # Actualizar los datos del usuario en SQL Server
+        resultado = usuario_dao.actualizar_datos_usuario(id_usuario, nuevo_nombre, nuevo_mensaje)
+
+        if resultado:
+            session['nombre_usuario'] = nuevo_nombre
+            return redirect(url_for('perfil', id_usuario=session['id_usuario']))
+        else:
+            user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data, profile_picture=foto_perfil)
+
+    user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+    return render_template('editar_perfil.html', user=user_data, profile_picture=foto_perfil)
 
 @app.route('/buscar_usuarios')
 def buscar_usuarios():
