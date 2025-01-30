@@ -10,10 +10,8 @@
     <div class="barrita">
         <p class="titulo">Editar Perfil</p>
         <div class="edit">
-            {% if profile_picture %}
-            <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil" class="img1">
-            {% else %}
-            <!-- <p>No hay foto de perfil disponible.</p> -->
+            {% if user.foto_perfil %}
+                <img src="data:image/png;base64,{{ user.foto_perfil }}" alt="Foto de perfil" class="img1">
             {% endif %}
         </div>
     </div>
@@ -22,10 +20,10 @@
         <div class="dentro">
             <form method="POST" action="{{ url_for('editar_perfil') }}" enctype="multipart/form-data">
                 <label for="nuevo_nombre">Nombre Usuario:</label>
-                <input type="text" id="nuevo_nombre" name="nuevo_nombre" value="{{ user['username'] }}" required><br><br>
+                <input type="text" id="nuevo_nombre" name="nuevo_nombre" value="{{ user.nombre_usuario }}" required><br><br>
             
                 <label for="nuevo_mensaje">Descripción:</label><br>
-                <textarea id="nuevo_mensaje" name="nuevo_mensaje" rows="4">{{ user['mensaje'] }}</textarea><br><br>
+                <textarea id="nuevo_mensaje" name="nuevo_mensaje" rows="4">{{ user.descripcion }}</textarea><br><br>
                 
                 <label for="foto_perfil" class="label1">Subir foto</label>
                 <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*" class="cargar"><br><br>
@@ -38,7 +36,7 @@
             </form>
         </div>
     </div>
-    <a href="{{ url_for('perfil', id_usuario=user.id) }}">Regresar</a>
+    <a href="{{ url_for('perfil', id_usuario=user.id_usuario) }}">Regresar</a>
     
 </body>
 </html>

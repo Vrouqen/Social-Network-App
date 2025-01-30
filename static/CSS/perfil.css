@@ -118,6 +118,17 @@ ul{
     margin: 0 auto;
 }
 
+.partelike{
+    display: flex;
+    justify-content: end;   
+    align-items:unsafe;
+    width: 30%;
+}
+.respuesta{
+    width: 60%;
+    height: 100px;
+    display: block;
+}
 .publiuser{
     margin:0 10%;
     padding: 0.2% 2%;
@@ -131,10 +142,12 @@ ul{
     border-color:  #00307969;
 }
 .likeuser{
-    margin:1% 9%;
+    margin:0 auto;
+    padding-top: 10px;
     display: flex;
-    justify-content: end;
     width: 80%;
+    height: 120px;
+    justify-content: space-between;
 }
 .img3{
     width: 5%;

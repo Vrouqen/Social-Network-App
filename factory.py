@@ -113,6 +113,7 @@ class UsuarioDAO:
         result = self.cursor.fetchone()
         if result: #Valida que haya retornado una respuesta
             return {'id': result[0], 'username': result[1], 'email': result[2], 'descripcion':result[3]} #Devuelve en un diccionario los datos del usuario
+        
         return None
     
     def obtener_cant_seguidores(self, id_usuario):
@@ -183,6 +184,7 @@ class FotoPerfilDAO:
         else:
             return None
         
+# DAO para conexión a la colección Publicacion en MongoDB
 class PublicacionDAO:
     def __init__(self, conexion_mongo):
         self.conexion = conexion_mongo  # Conexión a MongoDB
@@ -226,6 +228,102 @@ class PublicacionDAO:
         for publicacion in publicaciones:
             publicacion["_id"] = str(publicacion["_id"])
         return publicaciones
+
+class UsuarioDTO:
+    def __init__(self, id_usuario, nombre_usuario, correo, descripcion, foto_perfil, cant_seguidos, cant_seguidores):
+        self.id_usuario = id_usuario
+        self.nombre_usuario = nombre_usuario
+        self.correo = correo
+        self.descripcion = descripcion
+        self.foto_perfil = foto_perfil
+        self.cant_seguidos = cant_seguidos
+        self.cant_seguidores = cant_seguidores
+
+    def to_dict(self):
+        return {
+            "id_usuario": self.id_usuario,
+            "nombre_usuario": self.nombre_usuario,
+            "correo": self.correo,
+            "descripcion": self.descripcion,
+            "foto_perfil": self.foto_perfil,
+            "cant_seguidos": self.cant_seguidos,
+            "cant_seguidores": self.cant_seguidores
+        }
+    
+    def obtener_informacion_usuario(UsuarioDAO, FotoPerfilDAO, id_usuario):
+        data_usuario = UsuarioDAO.obtener_usuario_id(id_usuario)
+        foto_perfil = FotoPerfilDAO.obtener_foto_perfil(id_usuario)
+        cant_seguidos = UsuarioDAO.obtener_cant_seguidos(id_usuario)
+        cant_seguidores = UsuarioDAO.obtener_cant_seguidores(id_usuario)
+
+        usuario_dto = UsuarioDTO(data_usuario['id'], data_usuario['username'], data_usuario['email'], 
+                                 data_usuario['descripcion'], foto_perfil, cant_seguidos, cant_seguidores)
+        return usuario_dto.to_dict()
+
+class PublicacionDTO:
+    def __init__(self, id_publicacion, id_usuario, contenido, fecha, foto_publicacion, id_respuesta, 
+                 cant_likes, nombre_usuario, cantidad_likes, like):
+        self.id_publicacion = id_publicacion
+        self.id_usuario = id_usuario
+        self.contenido = contenido
+        self.fecha = fecha
+        self.foto_publicacion = foto_publicacion
+        self.id_respuesta = id_respuesta
+        self.cant_likes = cant_likes
+        self.nombre_usuario = nombre_usuario
+        self.cantidad_likes = cantidad_likes
+        self.like = like
+
+    def to_dict(self):
+        return {
+            "id_publicacion": self.id_publicacion,  # Arreglado el mapeo
+            "id_usuario": self.id_usuario,
+            "contenido": self.contenido,
+            "fecha": self.fecha,
+            "foto_publicacion": self.foto_publicacion,
+            "id_respuesta": self.id_respuesta,
+            "cantidad_likes": self.cant_likes,
+            "nombre_usuario": self.nombre_usuario,
+            "cantidad_likes": self.cantidad_likes,
+            "like": self.like
+        }
+
+    @staticmethod
+    def obtener_informacion_publicaciones(PublicacionDAO, UsuarioDAO, id_usuario_logeado, id_usuario=None):
+        if id_usuario is None:
+            data_publicaciones = PublicacionDAO.obtener_publicaciones()
+        else:
+            data_publicaciones = PublicacionDAO.obtener_publicaciones(id_usuario)
+
+        publicaciones_enriquecidas = []  # Lista para almacenar los diccionarios de publicaciones
+
+        for publicacion in data_publicaciones:
+            nombre_usuario = UsuarioDAO.obtener_usuario_id(publicacion["id_usuario"])["username"]
+            cantidad_likes = UsuarioDAO.obtener_cant_likes(publicacion["id_publicacion"])  # Corregido el parámetro
+            verificar_like = UsuarioDAO.verificar_like(publicacion["id_publicacion"], id_usuario_logeado)
+
+            publicacion["nombre_usuario"] = nombre_usuario
+            publicacion["cantidad_likes"] = cantidad_likes
+            publicacion["like"] = verificar_like
+
+            # Crear el DTO para cada publicación y agregarlo a la lista
+            publicacion_dto = PublicacionDTO(
+                publicacion['id_publicacion'],
+                publicacion['id_usuario'],
+                publicacion['contenido'],
+                publicacion['fecha'],
+                publicacion['foto_publicacion'],
+                publicacion['id_respuesta'],
+                publicacion['cantidad_likes'],
+                publicacion['nombre_usuario'],
+                publicacion['cantidad_likes'],
+                publicacion['like']
+            )
+            publicaciones_enriquecidas.append(publicacion_dto.to_dict())  # Convertir a dict y agregar a la lista
+
+        return publicaciones_enriquecidas
+
+
 
 class DatabaseFactory:
     def crear_usuario_dao(self, config):

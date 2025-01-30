@@ -23,18 +23,18 @@
     <div class="containerp">
         <div class="imagenc">
             <p>Foto de perfil<p>
-            {% if profile_picture %}
-            <img src="data:image/png;base64,{{ profile_picture }}" alt="Foto de perfil">
+            {% if user.foto_perfil %}
+            <img src="data:image/png;base64,{{ user.foto_perfil }}" alt="Foto de perfil">
             {% endif %}
         </div>
         <div class="datos">
-            <p>{{ user.username }}</p>
-            <p>{{ user.email }}</p>
+            <p>{{ user.nombre_usuario }}</p>
+            <p>{{ user.correo }}</p>
             <p>{{ user.descripcion}}</p>
-            <p>Seguidos {{ cant_seguidos }}  Seguidores {{ cant_seguidores }}</p>
+            <p>Seguidos {{ user.cant_seguidos }}  Seguidores {{ user.cant_seguidores }}</p>
             <div>
-                <form action="{{ url_for('seguir_usuario', id_usuario=user.id) }}" method="GET">
-                    {% if user.id != session['id_usuario']  %}
+                <form action="{{ url_for('seguir_usuario', id_usuario=user.id_usuario) }}" method="GET">
+                    {% if user.id_usuario != session['id_usuario']  %}
                         {% if sigue_al_usuario %}
                             <button type="submit" class="btns">Siguiendo</button>
                         {% else %}
@@ -59,6 +59,7 @@
     <div class="containerpu"> 
         <ul>
             {% for publicacion in publicaciones_usuario %}
+                {% if publicacion.id_respuesta == None %}
                 <li class="li1">
                     <p class="p1">
                         <a href="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
@@ -76,7 +77,6 @@
                             <form action="{{ url_for('responder_publicacion', id_publicacion=publicacion.id_publicacion) }}" method="POST">
                                 <textarea name="respuesta" placeholder="Comentar" required></textarea><br>
                                 <button type="submit">Enviar</button>
-                                
                             </form> 
                         </div>
                         <div class="partelike">
@@ -86,8 +86,8 @@
                                 {% else %}
                                     <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/fotounlike.png')}}" class="img3"></button>
                                 {% endif %}
-                                {{ publicacion.cant_likes}}
-                               
+                                {{ publicacion.cantidad_likes}}
+                                <input type="hidden" name="next_url" value="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
                             </form>    
                         </div>
                     </div>
@@ -114,16 +114,18 @@
                                             {% else %}
                                                 <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/fotounlike.png')}}" class="img3"></button>
                                             {% endif %}
+                                            <input type="hidden" name="next_url" value="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
                                         </form>    
                                     </div>
                                     <div>
-                                        {{ respuesta.cant_likes }}
+                                        {{ respuesta.cantidad_likes }}
                                     </div>
                                 </div>
                             {% endif %}
                         {% endfor %}
                     </div>
                 </li>
+                {% endif %}
             {% endfor %}
         </ul>
 

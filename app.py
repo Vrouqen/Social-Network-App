@@ -6,6 +6,7 @@ import base64
 import imghdr
 from PIL import Image
 import io
+from factory import UsuarioDTO, PublicacionDTO
 
 app = Flask(__name__)
 
@@ -94,10 +95,10 @@ def crear_publicacion():
         if file and file.filename != '':
             image = Image.open(file)
 
-            if image.width > 625:
-                ratio = 625 / image.width
+            if image.width > 580:
+                ratio = 580 / image.width
                 new_height = int(image.height * ratio)
-                image = image.resize((625, new_height), Image.LANCZOS)
+                image = image.resize((580, new_height), Image.LANCZOS)
 
             buffered = io.BytesIO()
             image.save(buffered, format="PNG")
@@ -124,36 +125,25 @@ def responder_publicacion(id_publicacion):
 
 @app.route('/publicaciones')
 def publicaciones():
-    if 'id_usuario' not in session: # Verifica que exista una sesión activa
-        return redirect(url_for('inicio')) # De no ser así lo direcciona al login
+    if 'id_usuario' not in session:  # Verifica que exista una sesión activa
+        return redirect(url_for('inicio'))  # Si no, redirige al login
     
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    publicaciones = publicacion_dao.obtener_publicaciones() # Se obtiene un JSON con las publicaciones
-
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-
-    # Enriquecer cada publicación con nombre de usuario y cantidad de likes
-    for publicacion in publicaciones:
-        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"]) # Obtiene la información del usuario por id
-        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"]) # Obtiene la cantidad de likes de la publicación
-        verificar_like = usuario_dao.verificar_like(publicacion["id_publicacion"], session['id_usuario']) # Verifica que el usuario haya likeado
-        if usuario: 
-            publicacion["nombre_usuario"] = usuario["username"] # Se le asigna al nombre de usuario de la publicación el username de la consulta
-            publicacion["cant_likes"] = cant_likes # Se le asigna la cantidad de likes a la publicación  
-            publicacion["like"] = verificar_like
-    
-    user_data = usuario_dao.obtener_usuario_id(session['id_usuario']) # Obtener información del usuario en sesión
-
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
-    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario']) # Obtener foto de perfil
 
-    return render_template('publicaciones.html', publicaciones=publicaciones, user=user_data, profile_picture=foto_perfil)
+    # Métodos DTO
+    usuario_info = UsuarioDTO.obtener_informacion_usuario(usuario_dao, foto_perfil_dao, session['id_usuario'])
+    publicaciones = PublicacionDTO.obtener_informacion_publicaciones(publicacion_dao, usuario_dao, session['id_usuario'])
+
+    return render_template('publicaciones.html', publicaciones=publicaciones, user=usuario_info)
 
 @app.route('/likear_publicacion/<int:id_publicacion>')
+@app.route('/likear_publicacion/<int:id_publicacion>', methods=['GET'])
 def likear_publicacion(id_publicacion):
     id_usuario = session['id_usuario']
-    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
 
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
     likeado = usuario_dao.verificar_like(id_publicacion, id_usuario)
 
     if likeado:
@@ -161,9 +151,11 @@ def likear_publicacion(id_publicacion):
     else:
         usuario_dao.likear_publicacion(id_publicacion, id_usuario)
 
-    next_url = request.args.get('next_url', url_for('publicaciones'))
+    # Obtener la URL de redirección desde next_url o por defecto redirigir al perfil
+    next_url = request.args.get('next_url', url_for('perfil', id_usuario=id_usuario))
 
     return redirect(next_url)
+
 
 @app.route('/perfil/<int:id_usuario>')
 def perfil(id_usuario=None):
@@ -171,49 +163,21 @@ def perfil(id_usuario=None):
         return redirect(url_for('inicio'))
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
+    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
 
     if id_usuario is None:  
         id_usuario = session['id_usuario']  # Si no se proporciona, usa el usuario en sesión
 
-    user_data = usuario_dao.obtener_usuario_id(id_usuario)  # Obtener datos del usuario
-    if not user_data:
-        return redirect(url_for('publicaciones'))  # Redirige si el usuario no existe
-
-    publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-    publicaciones_usuario = publicacion_dao.obtener_publicaciones(id_usuario)  # Obtener publicaciones del usuario
-    publicaciones = publicacion_dao.obtener_publicaciones()
-
-    for publicacion in publicaciones_usuario:
-        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
-        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
-        verificar_like = usuario_dao.verificar_like(publicacion["id_publicacion"], session['id_usuario']) 
-        # Verificar los likes en la publicaciones
-        publicacion["cant_likes"] = cant_likes  
-        publicacion["nombre_usuario"] = usuario['username']
-        publicacion["like"] = verificar_like
-
-    for publicacion in publicaciones:
-        usuario = usuario_dao.obtener_usuario_id(publicacion["id_usuario"])
-        cant_likes = usuario_dao.obtener_cant_likes(publicacion["id_publicacion"])
-        verificar_like = usuario_dao.verificar_like(publicacion["id_publicacion"], session['id_usuario']) 
-        # Verificar los likes en la publicaciones
-        publicacion["cant_likes"] = cant_likes  
-        publicacion["nombre_usuario"] = usuario['username']
-        publicacion["like"] = verificar_like
-
-    cant_seguidores = usuario_dao.obtener_cant_seguidores(id_usuario)
-    cant_seguidos = usuario_dao.obtener_cant_seguidos(id_usuario)
-
-    foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
-    foto_perfil = foto_perfil_dao.obtener_foto_perfil(id_usuario)
+    publicaciones_usuario = PublicacionDTO.obtener_informacion_publicaciones(publicacion_dao, usuario_dao, session['id_usuario'],id_usuario)  # Obtener publicaciones del usuario
+    publicaciones = PublicacionDTO.obtener_informacion_publicaciones(publicacion_dao, usuario_dao, session['id_usuario'])
+    usuario_info = UsuarioDTO.obtener_informacion_usuario(usuario_dao, foto_perfil_dao, id_usuario)
 
     # Verificar si el usuario en sesión ya sigue al perfil visitado
     id_usuario_sesion = session['id_usuario']
     sigue_al_usuario = usuario_dao.verificar_seguimiento(id_usuario_sesion, id_usuario)
 
-    return render_template('perfil.html', publicaciones_usuario=publicaciones_usuario, publicaciones=publicaciones, user=user_data, 
-                           profile_picture=foto_perfil, cant_seguidores=cant_seguidores, 
-                           cant_seguidos=cant_seguidos, sigue_al_usuario=sigue_al_usuario)
+    return render_template('perfil.html', publicaciones_usuario=publicaciones_usuario, publicaciones=publicaciones, user=usuario_info, sigue_al_usuario=sigue_al_usuario)
 
 @app.route('/editar_perfil', methods=['GET', 'POST'])
 def editar_perfil():
@@ -222,8 +186,7 @@ def editar_perfil():
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
-    foto_perfil = foto_perfil_dao.obtener_foto_perfil(session['id_usuario'])
-
+    user_data = UsuarioDTO.obtener_informacion_usuario(usuario_dao, foto_perfil_dao, session['id_usuario'])
     if request.method == 'POST':
         nuevo_nombre = request.form['nuevo_nombre']
         nuevo_mensaje = request.form['nuevo_mensaje']
@@ -234,10 +197,10 @@ def editar_perfil():
             file = request.files['foto_perfil']
             if file and file.filename != '':
                 file_bytes = file.read()
-                
+
                 tipo_imagen = imghdr.what(None, file_bytes)
                 if not tipo_imagen or tipo_imagen not in ['jpeg', 'png', 'gif']:
-                    return render_template('editar_perfil.html', error=True, mensaje="Formato de imagen no válido", user=user_data, profile_picture=foto_perfil)
+                    return render_template('editar_perfil.html', error=True, mensaje="Formato de imagen no válido", user=user_data)
 
                 # Abrir la imagen y hacerla cuadrada
                 image = Image.open(io.BytesIO(file_bytes))
@@ -267,10 +230,9 @@ def editar_perfil():
             return redirect(url_for('perfil', id_usuario=session['id_usuario']))
         else:
             user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data, profile_picture=foto_perfil)
-
-    user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
-    return render_template('editar_perfil.html', user=user_data, profile_picture=foto_perfil)
+            return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data)
+    
+    return render_template('editar_perfil.html', user=user_data)
 
 @app.route('/buscar_usuarios')
 def buscar_usuarios():
