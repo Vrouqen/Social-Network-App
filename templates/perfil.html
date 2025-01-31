@@ -110,9 +110,9 @@
                                     <div>
                                         <form action="{{ url_for('likear_publicacion', id_publicacion=respuesta.id_publicacion) }}" method="GET">
                                             {% if respuesta.like %}
-                                                <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/like.png')}}" class="img3"></button>
+                                                <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/like.png')}}" class="img4"></button>
                                             {% else %}
-                                                <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/fotounlike.png')}}" class="img3"></button>
+                                                <button type="submit" class="btnlike"><img src="{{url_for('static', filename='./Images/fotounlike.png')}}" class="img4"></button>
                                             {% endif %}
                                             <input type="hidden" name="next_url" value="{{ url_for('perfil', id_usuario=publicacion.id_usuario) }}">
                                         </form>    
