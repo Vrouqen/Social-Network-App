@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=proyectogrupo5AS
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=ProyectoGrupo5
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - app-network
+
+  app:
+    build: .
+    container_name: app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+      - sqlserver
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+    networks:
+      - app-network
+
+volumes:
+  mongodb_data:
+  sqlserver_data:
+
+networks:
+  app-network:
+    driver: bridge

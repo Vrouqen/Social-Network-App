@@ -6,47 +6,57 @@ import os
 import base64
 from datetime import datetime
 
-# Clase abstracta para las conexiones
+# Clase abstracta para conexión
 class Conexion(ABC):
     def __init__(self, config):
-        self.config = config # Parámetros que tendrán la conexión
-        self.conectar() # Se conecta instantáneamente al crear el objeto conexión
-    
-    @abstractmethod # Método que estará en todos los objetos que sean de tipo conexión
+        self.config = config  # Parámetros que tendrán la conexión
+        self.conectar()  # Se conecta instantáneamente al crear el objeto conexión
+
+    @abstractmethod
     def conectar(self):
         pass
 
 # Conexión a SQL Server
 class ConexionSQLServer(Conexion):
-    def conectar(self): # Función que conecta a la base de datos
-        self.conexion = pyodbc.connect(
-            f'DRIVER={self.config["driver"]};'
-            f'SERVER={self.config["server"]};'
-            f'DATABASE={self.config["database"]};'
-            f'UID={self.config["username"]};'
-            f'PWD={self.config["password"]}',
-            autocommit=False
-        )
-        self.cursor = self.conexion.cursor() # Se conecta con la configuración
-    
-    def commit(self): # Se confirma la transacción
+    def conectar(self):
+        try:
+            self.conexion = pyodbc.connect(
+                f"DRIVER={self.config['driver']};"
+                f"SERVER={self.config['server']};"
+                f"DATABASE={self.config['database']};"
+                f"UID={self.config['username']};"
+                f"PWD={self.config['password']}",
+                autocommit=False
+            )
+            self.cursor = self.conexion.cursor()
+            print("Conexión exitosa a SQL Server")
+        except pyodbc.Error as e:
+            print(f"Error al conectar a SQL Server: {e}")
+            raise
+
+    def commit(self):
         try:
             self.conexion.commit()
         except Exception as e:
             print(f"Error en commit: {e}")
-    
-    def rollback(self): # Se revierte la transacción en caso de error
+
+    def rollback(self):
         self.conexion.rollback()
 
 # Conexión a MongoDB
 class ConexionMongo(Conexion):
     def conectar(self):
-        self.client = MongoClient( # Se crea la cadena de conexión
-            f"mongodb://{self.config['username']}:{self.config['password']}@{self.config['host']}:{self.config['port']}/"
-        )
-        self.db = self.client[self.config["database"]] #Hace referencia la base de datos
-        self.collection = self.db[self.config["collection"]] #Hace referencia a la colección de datos en MongoDB
-
+        try:
+            self.client = MongoClient(
+                f"mongodb://{self.config['username']}:{self.config['password']}@{self.config['host']}:{self.config['port']}/"
+            )
+            self.db = self.client[self.config["database"]]
+            self.collection = self.db[self.config["collection"]]
+            print("Conexión exitosa a MongoDB")
+        except Exception as e:
+            print(f"Error al conectar a MongoDB: {e}")
+            raise
+        
 # DAO para usuarios en SQL Server
 class UsuarioDAO:
     def __init__(self, conexion_sql):

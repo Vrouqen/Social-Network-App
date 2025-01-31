@@ -13,13 +13,14 @@ app = Flask(__name__)
 # Configuración de las bases de datos
 SQL_SERVER_CONFIG = {
     'driver': 'ODBC Driver 17 for SQL Server',
-    'server': 'localhost,1433',
+    'server': 'sql_server_container,1433', 
     'database': 'Registros',
     'username': 'sa',
     'password': 'ProyectoGrupo5'
 }
+
 MONGO_DB_CONFIG = {
-    'host': 'localhost',
+    'host': 'mongodb', 
     'port': 27017,
     'database': 'Proyecto_Grupo5',
     'collection': 'Fotos_Perfil',
@@ -265,4 +266,4 @@ def logout(): # Se elimina la sesión activa
     return redirect(url_for('inicio')) # Se redirecciona al login
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
