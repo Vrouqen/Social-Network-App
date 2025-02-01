@@ -23,9 +23,11 @@
     <div class="containerp">
         <div class="imagenc">
             <p>Foto de perfil<p>
-            {% if user.foto_perfil %}
-            <img src="data:image/png;base64,{{ user.foto_perfil }}" alt="Foto de perfil">
-            {% endif %}
+                {% if user.foto_perfil %}
+                <img src="data:image/png;base64,{{ user.foto_perfil }}" alt="Foto" class="img1">
+                {% else %}
+                <img src="{{ url_for('static', filename='Images/foto_defecto.png') }}" alt="Foto por defecto" class="img1">
+            {% endif %}    
         </div>
         <div class="datos">
             <p>{{ user.nombre_usuario }}</p>
