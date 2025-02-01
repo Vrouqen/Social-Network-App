@@ -1,12 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_session import Session
-from factory import DatabaseFactory
 from flask import jsonify
 import base64
 import imghdr
 from PIL import Image
 import io
-from factory import UsuarioDTO, PublicacionDTO
+from factory import DatabaseFactory # Abstract Factory
+from factory import UsuarioDTO, PublicacionDTO #Implementación de DTO's
 
 app = Flask(__name__)
 
@@ -51,7 +51,7 @@ def login():
         usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
         user_data = usuario_dao.verificar_usuario(username, password) # Se verifica que el usuario no exista en la base de datos
         
-        if user_data:
+        if user_data: # En caso de que haya iniciado correctamente se guarda la sesión con sus credenciales
             session['id_usuario'] = user_data['id']
             session['nombre_usuario'] = user_data['username']
             
@@ -59,7 +59,7 @@ def login():
         
         return redirect(url_for('inicio')) # Si no es así se dirige al login nuevamente
     
-    return redirect(url_for('inicio')) # Redirecciona a la página de login
+    return redirect(url_for('inicio')) # Redirecciona a la página de login si trata de acceder a la url sin la interfaz
 
 @app.route('/crear_cuenta', methods=['GET', 'POST'])
 def crear_cuenta():
@@ -79,7 +79,7 @@ def crear_cuenta():
         # Si hubo un error en el registro, puedes redirigir o mostrar un mensaje de error
         return render_template('crear_cuenta.html', error=True, mensaje="Error en el registro.")
     
-    return render_template('crear_cuenta.html') # Redirecciona a la página de crear cuenta
+    return render_template('crear_cuenta.html') # Redirecciona a la página de login si trata de acceder a la url sin la interfaz
 
 @app.route('/crear_publicacion', methods=['POST'])
 def crear_publicacion():
@@ -90,23 +90,23 @@ def crear_publicacion():
     id_usuario = session['id_usuario']
     
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
-     # Procesar la imagen si se subió un archivo
-    if 'foto_publicacion' in request.files:
+    
+    if 'foto_publicacion' in request.files: # Verifica que el usuario haya subido una imágen
         file = request.files['foto_publicacion']
         if file and file.filename != '':
             image = Image.open(file)
 
-            if image.width > 580:
+            if image.width > 580: # Redimensiona la imagen que se coloque en la publicación si su ancho es más grande que 580 píxeles
                 ratio = 580 / image.width
                 new_height = int(image.height * ratio)
                 image = image.resize((580, new_height), Image.LANCZOS)
 
             buffered = io.BytesIO()
             image.save(buffered, format="PNG")
-            foto_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            foto_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8') # Se almacena la imagen en Base64 para ser almacenada en MONGO
             resultado = publicacion_dao.crear_publicacion(id_usuario, contenido,foto_base64) # Se almacena la publicación en la base de datos
 
-    resultado = publicacion_dao.crear_publicacion(id_usuario, contenido)
+    resultado = publicacion_dao.crear_publicacion(id_usuario, contenido) # Si no hay imagen crea la publicación de todas maneras
 
     return redirect(url_for('publicaciones'))  # Redirigir a la página donde se muestran las publicaciones
 
@@ -129,6 +129,7 @@ def publicaciones():
     if 'id_usuario' not in session:  # Verifica que exista una sesión activa
         return redirect(url_for('inicio'))  # Si no, redirige al login
     
+    # DAO's de todas las bases de datos
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
@@ -145,31 +146,32 @@ def likear_publicacion(id_publicacion):
     id_usuario = session['id_usuario']
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-    likeado = usuario_dao.verificar_like(id_publicacion, id_usuario)
+    likeado = usuario_dao.verificar_like(id_publicacion, id_usuario) # Verifica que el usuario de la sesión haya dado like a la publicación
 
     if likeado:
-        usuario_dao.unlikear_publicacion(id_publicacion, id_usuario)
+        usuario_dao.unlikear_publicacion(id_publicacion, id_usuario) # Unlikea la publicación en cuestión
     else:
-        usuario_dao.likear_publicacion(id_publicacion, id_usuario)
+        usuario_dao.likear_publicacion(id_publicacion, id_usuario) # Likea la publicación en cuestión
 
     # Obtener la URL de redirección desde next_url o por defecto redirigir al perfil
     next_url = request.args.get('next_url', url_for('perfil', id_usuario=id_usuario))
 
     return redirect(next_url)
 
-
 @app.route('/perfil/<int:id_usuario>')
 def perfil(id_usuario=None):
-    if 'id_usuario' not in session:
-        return redirect(url_for('inicio'))
+    if 'id_usuario' not in session:  # Verifica que exista una sesión activa
+        return redirect(url_for('inicio'))  # Si no, redirige al login
 
+    # DAO's de las bases de datos
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
     publicacion_dao = factory.crear_publicacion_dao(MONGO_DB_CONFIG)
 
     if id_usuario is None:  
-        id_usuario = session['id_usuario']  # Si no se proporciona, usa el usuario en sesión
+        id_usuario = session['id_usuario']  # Si no se proporciona id_usuario en el método, utiliza el usuario en sesión
 
+    # DTO's de datos
     publicaciones_usuario = PublicacionDTO.obtener_informacion_publicaciones(publicacion_dao, usuario_dao, session['id_usuario'],id_usuario)  # Obtener publicaciones del usuario
     publicaciones = PublicacionDTO.obtener_informacion_publicaciones(publicacion_dao, usuario_dao, session['id_usuario'])
     usuario_info = UsuarioDTO.obtener_informacion_usuario(usuario_dao, foto_perfil_dao, id_usuario)
@@ -182,12 +184,16 @@ def perfil(id_usuario=None):
 
 @app.route('/editar_perfil', methods=['GET', 'POST'])
 def editar_perfil():
-    if 'id_usuario' not in session:
-        return redirect(url_for('inicio'))
+    if 'id_usuario' not in session:  # Verifica que exista una sesión activa
+        return redirect(url_for('inicio'))  # Si no, redirige al login
 
+    # DAO's de las bases de datos
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
     foto_perfil_dao = factory.crear_foto_perfil_dao(MONGO_DB_CONFIG)
+
+    # DTO de la información del usuario
     user_data = UsuarioDTO.obtener_informacion_usuario(usuario_dao, foto_perfil_dao, session['id_usuario'])
+
     if request.method == 'POST':
         nuevo_nombre = request.form['nuevo_nombre']
         nuevo_mensaje = request.form['nuevo_mensaje']
@@ -219,45 +225,45 @@ def editar_perfil():
                 # Convertir la imagen editada a Base64
                 buffered = io.BytesIO()
                 image.save(buffered, format="PNG")
-                foto_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+                foto_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8') # Almacena la imagen en formato Base64 para MongoDB
 
-                foto_perfil_dao.actualizar_foto_perfil(id_usuario, foto_base64)
+                foto_perfil_dao.actualizar_foto_perfil(id_usuario, foto_base64) # Actualiza la imagen del usuario
 
         # Actualizar los datos del usuario en SQL Server
         resultado = usuario_dao.actualizar_datos_usuario(id_usuario, nuevo_nombre, nuevo_mensaje)
 
-        if resultado:
-            session['nombre_usuario'] = nuevo_nombre
-            return redirect(url_for('perfil', id_usuario=session['id_usuario']))
-        else:
+        if resultado: # Si se actualiza con éxito la información
+            session['nombre_usuario'] = nuevo_nombre 
+            return redirect(url_for('perfil', id_usuario=session['id_usuario'])) # Redirecciona al perfil
+        else: # En caso de que no
             user_data = usuario_dao.obtener_usuario_id(session['id_usuario'])
+            # Redirecciona al formulario
             return render_template('editar_perfil.html', error=True, mensaje="Error el usuario ya existe", user=user_data)
     
-    return render_template('editar_perfil.html', user=user_data)
+    return render_template('editar_perfil.html', user=user_data) # Si trata de acceder a la url directamente
 
 @app.route('/buscar_usuarios')
 def buscar_usuarios():
     query = request.args.get('query', '') # Obtener el término de búsqueda desde la URL
 
     usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
-    resultados = usuario_dao.buscar_usuarios(query)  # Agregar método en el DAO
+    resultados = usuario_dao.buscar_usuarios(query)  # Busca al usuario
 
     return jsonify(resultados)
 
 @app.route('/seguir_usuario/<int:id_usuario>')
 def seguir_usuario(id_usuario):
-    id_seguidor = session['id_usuario']
-    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+    id_seguidor = session['id_usuario'] # Usuario que sigue
 
-    sigue = usuario_dao.verificar_seguimiento(id_seguidor, id_usuario)
+    usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG) # DAO de usuarios
+    sigue = usuario_dao.verificar_seguimiento(id_seguidor, id_usuario) # Verifica si lo sigue
 
-    if sigue:
-        usuario_dao.dejar_seguir_usuario(id_seguidor, id_usuario)
-    else:
-        print(f"{id_seguidor} comenzará a seguir a {id_usuario}")
-        usuario_dao.seguir_usuario(id_seguidor, id_usuario)
+    if sigue: # Si lo sigue
+        usuario_dao.dejar_seguir_usuario(id_seguidor, id_usuario) # El botón llama a la opción dejar de seguir
+    else: # Caso contrario   
+        usuario_dao.seguir_usuario(id_seguidor, id_usuario) # Se sigue al usuario
 
-    return redirect(url_for('perfil', id_usuario=id_usuario))
+    return redirect(url_for('perfil', id_usuario=id_usuario)) # Redirecciona al perfil del usuario que se sigue
 
 @app.route('/logout')
 def logout(): # Se elimina la sesión activa
@@ -266,4 +272,4 @@ def logout(): # Se elimina la sesión activa
     return redirect(url_for('inicio')) # Se redirecciona al login
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000) # Permite que otros usuarios en la red entren a la aplicación
