@@ -13,7 +13,7 @@ app = Flask(__name__)
 # Configuración de las bases de datos
 SQL_SERVER_CONFIG = {
     'driver': 'ODBC Driver 17 for SQL Server',
-    'server': 'sql_server_container,1433', 
+    'server': 'sqlserver,1433', 
     'database': 'Registros',
     'username': 'sa',
     'password': 'ProyectoGrupo5'
