@@ -339,7 +339,6 @@ class PublicacionDTO:
         return publicaciones_enriquecidas
 
 
- 
 class DatabaseFactory: # Clase padre de los DAO
     def crear_usuario_dao(self, config):
         conexion = ConexionSQLServer(config)

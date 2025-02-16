@@ -272,4 +272,4 @@ def logout(): # Se elimina la sesión activa
     return redirect(url_for('inicio')) # Se redirecciona al login
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000) # Permite que otros usuarios en la red entren a la aplicación
+    app.run(host='0.0.0.0', port=5000, debug=True) # Permite que otros usuarios en la red entren a la aplicación
