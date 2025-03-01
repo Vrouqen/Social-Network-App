@@ -61,6 +61,43 @@ def login():
     
     return redirect(url_for('inicio')) # Redirecciona a la página de login si trata de acceder a la url sin la interfaz
 
+
+import dns.resolver  # Importar para validar dominios de correo
+
+def validar_dominio(correo):
+    """Verifica si el dominio del correo tiene registros MX válidos."""
+    try:
+        dominio = correo.split('@')[1]  # Obtener el dominio del correo
+        registros_mx = dns.resolver.resolve(dominio, 'MX')  # Buscar registros MX
+        return bool(registros_mx)  # Retorna True si hay registros MX
+    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.Timeout):
+        return False  # Dominio no válido
+
+@app.route('/crear_cuenta', methods=['GET', 'POST'])
+def crear_cuenta():
+    if request.method == 'POST':
+        username = request.form['nombre_usuario']
+        correo = request.form['correo']
+        contrasena = request.form['contrasena']
+        confirmar_contrasena = request.form['confirmar_contrasena']
+
+        # Validar si el dominio del correo existe
+        if not validar_dominio(correo):
+            return render_template('crear_cuenta.html', error=True, mensaje="El dominio del correo no existe.")
+
+        # Llamar al método del DAO para registrar el usuario
+        usuario_dao = factory.crear_usuario_dao(SQL_SERVER_CONFIG)
+        resultado = usuario_dao.registrar_usuario(username, correo, contrasena, confirmar_contrasena)
+
+        if resultado:
+            return redirect(url_for('inicio'))  # Redirigir al login si el registro es exitoso
+
+        return render_template('crear_cuenta.html', error=True, mensaje="Error en el registro.")
+
+    return render_template('crear_cuenta.html')
+
+
+"""
 @app.route('/crear_cuenta', methods=['GET', 'POST'])
 def crear_cuenta():
     if request.method == 'POST':
@@ -80,6 +117,9 @@ def crear_cuenta():
         return render_template('crear_cuenta.html', error=True, mensaje="Error en el registro.")
     
     return render_template('crear_cuenta.html') # Redirecciona a la página de login si trata de acceder a la url sin la interfaz
+"""
+
+
 
 @app.route('/crear_publicacion', methods=['POST'])
 def crear_publicacion():
